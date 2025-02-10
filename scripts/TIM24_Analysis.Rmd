@@ -1,0 +1,438 @@
+---
+title: "TIM2024Analysis"
+author: "Zach Peagler"
+date: "2024-05-03"
+output: html_document
+---
+
+# Introduction
+
+This trial was conducted in a greenhouse at Kennesaw State University (KSU). Plants were assigned treatments in an offset grid pattern. Height measurements were taken regularly, and fluorescence measurements were conducted biweekly starting when the plant had enough leaf material to analyze with an Li-600.
+
+# 1.Setup
+
+## 1.1 Load Packages
+```{r packages, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse); require(lmerTest); require(showtext); require(MASS); require(scico); require(pwr); require(devtools); require(multcomp); require(rstatix); require(car); require(vegan)
+# custom package
+install_github("zachpeagler/ztils")
+require(ztils)
+```
+
+## 1.2 Initialize Variables
+```{r graphical_setup}
+
+a_palette <- "oslo"
+# super lazy way to make palettes
+two_colors = scico(3, palette=a_palette)
+four_colors = scico(5, palette=a_palette)
+five_colors = scico(6, palette=a_palette)
+true_two_col = scico(2, palette=a_palette)
+ten_col = scico(10, palette=a_palette)
+twelve_col = scico(13, palette=a_palette)
+
+# add fonts
+font_add_google("Open Sans", family = "open")
+font_add_google("Montserrat", family = "mont")
+# initialize imported fonts
+showtext_auto()
+# font sizes
+## title
+title_size = 24
+## subtitle
+subtitle_size = 20
+## caption
+caption_size = 16
+## text
+text_size = 16
+
+# custom shapes
+four_shapes = c(15,16,17,23)
+
+##### Experimental Constants
+
+treatment_order <- c("Control",
+                     "Liquid",
+                     "CG",
+                     "CBG")
+
+```
+
+## 1.3 Load and Clean Data
+
+### 1.3.1. Fluoro Data
+``` {r fluoro_data, include = TRUE}
+
+li_data_file <- "C:/Github/Thesis/data/TIM/TIM24_Fluoro.csv"
+li_data <- read.csv(li_data_file)[,c(2,3,7,8,9,10,17,28,32,34,35,36,39,40)] %>%
+  filter(leak_pct<10) %>%
+  mutate(Date = parse_date_time(Date, orders = "mdy"),
+         Time = parse_date_time(Time, orders = "T"),
+         plant = as.factor(paste(Column, Row)),
+         Treatment = factor(Treatment, 
+                            levels = treatment_order),
+         logitPS2 = logit(PhiPS2, FALSE)
+  ) %>%
+  group_by(Date) %>%
+  mutate(MinutesFromStart = round(difftime(Time, min(Time), units = "mins"), 2)) %>%
+  ungroup() %>%
+  mutate(
+    Time = format(Time, "%H:%M:%S")
+  )
+
+```
+
+### 1.3.2. Height Data
+``` {r height_data, include = TRUE}
+
+h_data_file <- "C:/Github/Thesis/data/TIM/TIM24_Height.csv"
+h_data <- read.csv(h_data_file) %>%
+  mutate(Date = parse_date_time(Date, orders = "mdy"),
+         Height = Height + 0.01,
+         Treatment = factor(Treatment, levels = treatment_order),
+         plant = as.factor(paste(Column, Row)))
+
+```
+
+### 1.3.3. Destructive Sampling Data
+```{r DS_data, include=TRUE}
+DS_data_file <- "C:/Github/Thesis/data/TIM/TIM24_DS.csv"
+DS_data <- read.csv(DS_data_file) %>%
+  mutate(plant = as.factor(paste(Column, Row)),
+         Treatment = factor(Treatment, levels = treatment_order))
+
+```
+
+# 2. Analysis
+
+## 2.1. Fluorometric Parameters
+
+### 2.1.1. Fluoro Exploratory Analysis
+``` {r fluoro_exploratory_analysis, include=TRUE}
+#gsw
+multiPDF_Z(filter(li_data, gsw >0)$gsw, 100, "all", a_palette, "gsw")
+multiCDF_Z(filter(li_data, gsw >0)$gsw, 100, "all", a_palette, "gsw")
+multiKS_cont(filter(li_data, gsw >0)$gsw, "all")
+
+###### Not significantly different than a Gamma or Normal distribution.
+###### Try models with both.
+
+# check for heteroscedasticity
+## in gsw as a function of treatment
+leveneTest(li_data$gsw~li_data$Treatment)
+## in gsw as a function of time from start
+leveneTest(li_data$gsw~li_data$MinutesFromStart)
+
+###### Unequal variances. Uh oh.
+
+## box plot by Treatment boxplot
+ggplot(data = li_data, aes(x= Treatment, y = gsw, fill=Treatment, color=Treatment)) +
+  geom_boxplot(alpha=.5, width=0.3, outliers = FALSE)+
+    geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=str_wrap("Stomatal Conductance Across Inoculation Treatments in Tomato", 40)
+  ) +
+  ylab(str_wrap("Stomatal Conductance (mol m-2 s-1)", 20))+
+#  annotate("text", x=1:4, y=3, label = c("a", "b", "b", "b"), size=5, family="open")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=16, family="mont", lineheight=0.8),
+    axis.title = element_text(size=16, family = "mont", face= "bold"),
+    title = element_text(size=20, family="open", face="bold")
+  )
+
+
+# GSW by date across relative humidity
+ggplot(data = li_data, aes(x=Date, y = gsw, 
+                           color = rh_s)) +
+  geom_jitter(width=1, size=2, alpha=1)+
+  scale_color_scico(begin=0.9, end=0, palette=a_palette)+
+#  scale_x_discrete(guide=guide_axis(check.overlap=TRUE))+
+  theme_bw()+
+  ylab(str_wrap("Stomatal Conductance (mol m-2 s-1)", 20))+
+  xlab("Days From Germination")+
+  labs(
+        tag="2023",
+    title=str_wrap("Stomatal Conductance By Days From Germination Across Relative Humidity in Tomato", 50)
+  )+
+    guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 10)))+
+  theme(
+    text = element_text(size=16, family="mont"),
+    legend.title = element_text(size=16, family="mont", face="bold"),
+    legend.text = element_text(size=14, family="mont"),
+    legend.position="right",
+    legend.title.position = "top",
+    legend.key.height = unit(.4, "cm"),
+    legend.background = element_rect(color=two_colors[2], fill=NA,
+                                     linewidth=.5, linetype = 2),
+    axis.title = element_text(size=16, family = "mont", face= "bold"),
+    title = element_text(size=20, family="open", face="bold", lineheight = .8)
+  )
+
+
+# GSW by time across relative humidity
+ggplot(data = li_data, aes(x=Time, y = gsw, 
+                           color = rh_s,
+                           shape = Treatment)) +
+  geom_jitter(width=1, size=2, alpha=1)+
+  scale_color_scico(begin=0.9, end=0, palette=a_palette)+
+  scale_shape_manual(values=four_shapes)+
+  scale_x_discrete(guide=guide_axis(check.overlap=TRUE))+
+  theme_bw()+
+  ylab(str_wrap("Stomatal Conductance (mol m-2 s-1)", 20))+
+  xlab("Time")+
+  labs(
+    title=str_wrap("Stomatal Conductance By Time Across Date in Tomato", 30)
+  )+
+    guides(color=guide_legend(title=str_wrap("Relative Humidity", 10)))+
+  theme(
+    text = element_text(size=16, family="mont", lineheight = 1),
+    legend.title = element_text(size=16, family="mont", face="bold"),
+    legend.text = element_text(size=14, family="mont"),
+    legend.position="right",
+    legend.title.position = "top",
+    legend.key.height = unit(.3, "cm"),
+    legend.background = element_rect(color=two_colors[2], fill=NA,
+                                     linewidth=.5, linetype = 2),
+    axis.title = element_text(size=16, family = "mont", face= "bold"),
+    title = element_text(size=20, family="open", face="bold", lineheight = .8)
+  )
+
+# gsw by Minutes from Start
+ggplot(data = li_data, aes(x=MinutesFromStart, y = gsw, shape = Treatment, color = rh_s)) +
+  geom_point(size=3)+
+  scale_color_scico(begin=0.9, end=0, palette=a_palette)+
+  theme_bw()+
+  ylab(str_wrap("Stomatal Conductance (mol m-2 s-1)", 20))+
+  xlab("Minutes From Start")+
+  labs(
+    title=str_wrap("Stomatal Conductance by Minutes From Start Across Relative Humidity and Treatment in Tomato", 40)
+  )+
+      guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 8)))+
+  theme(
+    text = element_text(size=16, family="mont"),
+    legend.position="right",
+    axis.title = element_text(size=16, family = "mont", face= "bold"),
+    title = element_text(size=20, family="open", face="bold", lineheight = .8)
+  )
+
+## phiPS2
+### because phiPS2 is a proportion [0:1], we don't have to create PDFs and CDFs or perform KS tests. For a proportion we can just logit transform it then use a linear model.
+
+### check for heteroscedasticity
+#### Pr(>F) of < 0.05 means that the value is homoscedastic
+leveneTest(li_data$PhiPS2~li_data$Treatment)
+
+###### Heteroscedastic by treatment.
+
+### box plot of logit PhiPS2 by treatment
+ggplot(data = li_data, aes(x= Treatment, y = PhiPS2, 
+                         fill=Treatment, color=Treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=str_wrap("PhiPS2 by Inoculation Treatment in Tomato", 30)
+  ) +
+  ylab("PhiPS2")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+### logit PhiPS2 by time scatterplot
+ggplot(data = li_data, aes(x= MinutesFromStart, y = logitPS2, shape = Treatment, color=Qamb)) +
+  geom_jitter( width=0, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_scico(begin=0.9, end=0, palette=a_palette)+
+#  scale_x_discrete(guide=guide_axis(check.overlap=TRUE))+
+  labs(
+    title=str_wrap("Logit PhiPS2 by Minutes From Start and Inoculation Treatment in Tomato", 40)) +
+  ylab("PhiPS2")+
+  xlab("MinutesFromStart")+
+  theme_bw()+
+  theme(
+    legend.position="right",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+```
+
+### 2.1.2. Fluoro Models and Post Hoc Analysis
+```{r fluoro_models}
+## gsw could be normal or gamma
+summary(model_gsw_n<- lmer(
+  gsw ~ Treatment + (1 | Date),
+  data = li_data))
+
+summary(model_fl_phi2<- lmer(
+  logitPS2 ~ Treatment + (1 | Date),
+  data = li_data))
+
+```
+
+### Height Analysis
+
+``` {r height_analysis, include = TRUE}
+
+# height
+multiPDF_Z(filter(h_data, Height >0)$Height, 100, "all", a_palette, "Height")
+multiCDF_Z(filter(h_data, Height >0)$Height, 100, "all", a_palette, "Height")
+multiKS_cont(filter(h_data, Height >0)$Height, "all")
+
+
+### box plot of height by treatment
+ggplot(data = h_data, aes(x= Treatment, y = Height, 
+                         fill=Treatment, color=Treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title="Height by Inoculation Treatment in Tomato"
+  ) +
+#    annotate("text", x=1:4, y=35, label = c("a", "ab", "ab", "b"), size=6, family="open")+
+  ylab("Height (cm)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+# height scatterplot
+ggplot(data=h_data, aes(x=Date, y=Height, color=Treatment))+
+  geom_jitter(size=2)+
+  facet_wrap(~Treatment)+
+  scale_color_manual(values = four_colors)+
+  labs(
+    title="Height by Date and Treatment in Tomato"
+  )+
+  ylab("Height (cm)")+
+  theme_bw()+
+    theme(
+    legend.position="right",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+summary(model_h <- lmer(
+  Height ~ Treatment + (1 | Date),
+  data = h_data))
+
+comps <- glht(model_h, linfct = mcp(Treatment = "Tukey"))
+cld(comps)
+
+```
+
+### Destructive Sampling Analysis
+
+``` {r DS_analysis, include = TRUE}
+# RS_length
+multiPDF_Z(DS_data$RS_Length, 100, "all", a_palette, "R:S Length")
+multiCDF_Z(DS_data$RS_Length, 100, "all", a_palette, "R:S Length")
+multiKS_cont(DS_data$RS_Length, "all")
+
+
+ggplot(data=DS_data, aes(x=Treatment, y=AG_Length, color=Treatment))+
+  geom_violin()+
+  geom_boxplot(width=0.2)+
+  geom_jitter()+
+  labs(
+    title="Aboveground Length by Treatment"
+  )
+
+ggplot(data=DS_data, aes(x=Treatment, y=AG_Mass, color=Treatment))+
+  geom_violin()+
+  geom_boxplot(width=0.2)+
+  geom_jitter()+
+    labs(
+    title="Aboveground Mass by Treatment"
+  )
+
+ggplot(data=DS_data, aes(x=Treatment, y=BG_Length, color=Treatment))+
+  geom_violin()+
+  geom_boxplot(width=0.2)+
+  geom_jitter()+
+    labs(
+    title="Belowground Length by Treatment"
+  )
+
+ggplot(data=DS_data, aes(x=Treatment, y=BG_Mass, color=Treatment))+
+  geom_violin()+
+  geom_boxplot(width=0.2)+
+  geom_jitter()+
+      labs(
+    title="Belowground Mass by Treatment"
+  )
+
+ggplot(data=DS_data, aes(x=Treatment, y=RS_Length, color=Treatment))+
+  geom_violin()+
+  geom_boxplot(width=0.2)+
+  geom_jitter()+
+          labs(
+    title="Root:Shoot Length by Treatment"
+  )
+
+ggplot(data=DS_data, aes(x=Treatment, y=RS_Mass, color=Treatment))+
+  geom_violin()+
+  geom_boxplot(width=0.2)+
+  geom_jitter()+
+        labs(
+    title="Root:Shoot Mass by Treatment"
+  )
+
+
+summary(model_RSL <- (lm(
+  logit(RS_Length) ~ Treatment,
+  data = DS_data)))
+
+summary(model_RSM <- (lm(
+  logit(RS_Mass) ~ Treatment,
+  data = DS_data)))
+
+p1 <- rda(DS_data[,4:7])
+summary(p1)
+biplot(p1)
+
+
+tr <- sort(unique(DS_data$Treatment))
+Treatments <- tr[match(DS_data$Treatment, tr)]
+
+cols <- c("red", "pink", "lightblue", "blue")
+
+px <- scores(p1)$sites
+vx <- scores(p1)$species
+
+ggplot()+
+  geom_point(data=px, aes(x=PC1, y=PC2, color=Treatments, shape=Treatments, fill=Treatments), size=3)+
+  scale_color_manual(values = four_colors)+
+  scale_fill_manual(values = four_colors)+
+  scale_shape_manual(values = four_shapes)+
+  geom_segment(data = vx, aes(x=0, y=0, xend=PC1*.225, yend=PC2*.225), color = "black")+
+  annotate("text", x=vx[,1]*.25, y=vx[,2]*.25, label = rownames(vx))+
+  labs(title=str_wrap("Principal Component Analysis for Tomato Destructive Sampling Metrics", 40))+
+  xlab("PC1 (67.76%)")+
+  ylab("PC2 (31.41%)")+
+  theme_bw()+
+  theme(
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+```
