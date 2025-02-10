@@ -456,6 +456,7 @@ d23_fl <- read.csv(d23_fl_file) %>%
                                row=="D"~"Soil+Foliar",
                                TRUE ~ NA),
     fruit = 1,
+    ripeness = abs(1 - round(penetrometer/max(na.omit(penetrometer)), 2)),
     logit_sugar = logit(sugar_avg/100),
     Sugar_grams = (sugar_avg/100)*mass,
     row = as.factor(row),
@@ -489,6 +490,7 @@ d23_li <- read.csv(d23_li_file, stringsAsFactors = T) %>%
   filter(leak_pct<10) %>%
   rename(Date_ref = Date) %>%
   mutate(Date = parse_date_time(Date_ref, orders = "mdy"),
+         Date = as.Date(Date),
          Time = parse_date_time(Time, orders = "T"),
          DaysFromGermination = as.numeric(round(difftime(Date, germdate23, units = c("days")), 0)),
          plant_fac = as.factor(paste(Row, Pot)),
@@ -502,7 +504,7 @@ d23_li <- read.csv(d23_li_file, stringsAsFactors = T) %>%
   mutate(
     Time = format(Time, "%H:%M:%S")
   )
-d23_li <- d23_li[,c(2,3,7,8,9,16,27,32,34,35,36,38,39,61,62,63,64,65,66)]
+d23_li <- d23_li[,c(2,3,7,8,9,16,27,31,34,35,36,38,39,61,62,63,64,65,66)]
 colnames(d23_li) <- tolower(colnames(d23_li))
 
 ## multispeq
@@ -1678,7 +1680,7 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = pber,
   )
 
 ### box plot of total fruit mass by treatment
-ggplot(data = d22_f_summary, aes(x= treatment, y = mass_sum, 
+ggplot(data = d23_fg_summary, aes(x= treatment, y = mass_sum, 
                          fill=treatment, color=treatment)) +
   geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
   geom_jitter( width=.15, height=0)+
@@ -1794,6 +1796,10 @@ ggplot(data = d23_fl, aes(x= mass, y = sugar_avg,
     title = element_text(size=title_size, family="open", face="bold")
   )
 
+## 3d scatter plot of sugar grams by mass & ripeness
+# 3d plot
+plot_ly(x=d23_fl$ripeness, y=d23_fl$mass, z=d23_fl$logit_sugar, type="scatter3d", mode="markers", color=d23_fl$treatment)
+
 ## box plot of mean sugar by Treatment
 ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean, 
                          fill=treatment, color=treatment)) +
@@ -1842,13 +1848,13 @@ multiPDF_Z(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")+
     labs(tag="2023")
 multiCDF_Z(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")+
     labs(tag="2023")
-multiKS_cont(d23_li$gsw, "all")
+multiKS_cont(filter(d23_li, gsw >0)$gsw, "all")
 
 # check for heteroscedasticity
 ## in gsw as a function of treatment
-leveneTest(d23_li$gsw~d23_li$Treatment)
+leveneTest(d23_li$gsw~d23_li$treatment)
 ## in gsw as a function of time from start
-leveneTest(d23_li$gsw~d23_li$MinutesFromStart)
+leveneTest(d23_li$gsw~d23_li$minutesfromstart)
 
 ## box plot by Treatment boxplot
 ggplot(data = d23_li, aes(x= treatment, y = gsw, fill=treatment, color=treatment)) +
@@ -1902,7 +1908,7 @@ ggplot(data = d23_li, aes(x=time, y = gsw,
                            color = date,
                            shape = treatment)) +
   geom_jitter(width=1, size=2, alpha=1)+
-  scale_color_scico_d(begin=0.9, end=0, palette=a_palette)+
+  scale_color_scico(begin=0.9, end=0, palette=a_palette)+
   scale_shape_manual(values=four_shapes)+
   scale_x_discrete(guide=guide_axis(check.overlap=TRUE))+
   theme_bw()+
