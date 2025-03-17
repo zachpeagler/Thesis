@@ -1,0 +1,34 @@
+
+How can you tell if a model is overfitted?
+    logitPS2 ~ Treatment + AmbientLight + (1 | Device)
+
+gsw and phi2 models
+
+Do scaled residuals *need* to be scaled around zero?
+
+What's the best way to assess if a model is accurate?
+
+everything except for treatment should be a random effect because I don't care about them, correct?
+
+when using random effects, if the random effect (RE) is continuous, should I get a random slope for each treatment (RE|Treatment)? or is there a better way to do it?
+
+
+##
+try log transforming y variable
+
+split factor into Treatment and Germination boolean
+
+cross validation
+    split dataset into folds (10x folding validation)
+    fit model to folds 1-9, test model on 10th fold (root means square error)
+        repeat for each set of 9 folds
+    end up with 10 rmse values, average them out
+
+    compare to a null model
+        fit null model to same 10 folds
+        use the MEAN of the data as the predicted value
+    use t test to compare RMSEs
+
+    RMSEnull - RMSEfitted / RMSEnull
+
+easier to just use Rsquared and pseudoRsquared

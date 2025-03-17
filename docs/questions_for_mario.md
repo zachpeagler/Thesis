@@ -55,3 +55,8 @@ working on it
 ### Pictures!
 ### Does a thesis contain budget and timeline sections, or is that only the proposal?
 ### How many graphs is appropriate in a thesis?
+
+## 2/29/2025
+Meeting with Nick on Tuesday, Feb 25 to talk about analysis.
+
+no real updates. working on thesis. it's slow going. reframing it to talk more about alginate rather than purely chitosan.

@@ -3,9 +3,12 @@
 
 I stumbled upon a paper that claimed alginate was superior to chitosan.
 
+Each year we got more ambitious. That was a mistake, kind of.
+
+
 Explain the missing data from each trial.
 
-2021 TIP, several plants are excluded because ???
+2021 TIP, several plants are excluded because of spider mites.
 
 | General stats       | 2021 | 2022 | 2023 | 2024 |
 |---------------------|------|------|------|------|
