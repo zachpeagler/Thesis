@@ -480,6 +480,7 @@ d23_fg <- read.csv(d23_fg_file) %>%
       BER==0~"FALSE",
       BER==1~"TRUE"),
     BER = as.logical(BER),
+    Treatment = factor(Treatment, levels = treatment_order23),
     fruit = 1,
     Plant = as.factor(paste0(Row, Pot)),
     Pot = as.factor(Pot),
@@ -531,6 +532,7 @@ d23_fl <- read.csv(d23_fl_file) %>%
       row=="C"~TRUE,
       row=="D"~TRUE
     ),
+    Treatment = factor(Treatment, levels = treatment_order23),
     fruit = 1,
     ripeness = abs(1 - round(penetrometer/max(na.omit(penetrometer)), 2)),
     logit_sugar = logit(sugar_avg/100),
@@ -581,7 +583,7 @@ d23_li <- read.csv(d23_li_file, stringsAsFactors = T) %>%
       Row=="C"~TRUE,
       Row=="D"~TRUE
     )) %>%
-  filter(leak_pct<10) %>%
+  filter(leak_pct<10 & gsw > 0) %>%
   rename(Date_ref = Date) %>%
   mutate(Date = parse_date_time(Date_ref, orders = "mdy"),
          Date = as.Date(Date),
@@ -2003,6 +2005,7 @@ ggplot(data = d23_fl, aes(x= mass, y = sugar_avg,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("23_sugar_by_mass.svg", path = "C:/Github/Thesis/figures/TIP23")
 
 ## box plot of mean sugar by Treatment
 ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean, 
@@ -2024,6 +2027,8 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("23_sugar_grams_mean.svg", path = "C:/Github/Thesis/figures/TIP23")
+
 
 ## box plot of total sugar by Treatment
 ggplot(data = d23_fl_summary, aes(x= treatment, y = sugar_grams_sum, 
@@ -2050,8 +2055,10 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = sugar_grams_sum,
 # PDF, CDF, and KS test
 multiPDF_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")+
     labs(tag="2023")
+ggsave("23_gsw_PDF.svg", path = "C:/Github/Thesis/figures/TIP23")
 multiCDF_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")+
     labs(tag="2023")
+ggsave("23_gsw_CDF.svg", path = "C:/Github/Thesis/figures/TIP23")
 multiKS_cont(filter(d23_li, gsw >0)$gsw, "all")
 
 # check for heteroscedasticity
@@ -2060,7 +2067,7 @@ leveneTest(d23_li$gsw~d23_li$treatment)
 ## in gsw as a function of time from start
 leveneTest(d23_li$gsw~d23_li$minutesfromstart)
 
-## box plot by Treatment boxplot
+## box plot by Treatment
 ggplot(data = d23_li, aes(x= treatment, y = gsw, fill=treatment, color=treatment)) +
   geom_boxplot(alpha=.5, width=0.3, outliers = FALSE)+
     geom_jitter( width=.15, height=0)+
@@ -2106,6 +2113,7 @@ ggplot(data = d23_li, aes(x=daysfromgermination, y = gsw,
     axis.title = element_text(size=16, family = "mont", face= "bold"),
     title = element_text(size=20, family="open", face="bold", lineheight = .8)
   )
+ggsave("23_gsw_by_date.svg", path = "C:/Github/Thesis/figures/TIP23")
 
 # GSW by time across relative humidity
 ggplot(data = d23_li, aes(x=time, y = gsw, 
@@ -2135,6 +2143,7 @@ ggplot(data = d23_li, aes(x=time, y = gsw,
     axis.title = element_text(size=16, family = "mont", face= "bold"),
     title = element_text(size=20, family="open", face="bold", lineheight = .5)
   )
+ggsave("23_gsw_by_time.svg", path = "C:/Github/Thesis/figures/TIP23")
 
 # gsw by relative humidity across treatment groups
 ggplot(data = d23_li, aes(x=rh_s, y = gsw, 
@@ -2236,6 +2245,8 @@ ggplot(data = d23_m, aes(x= date, y = logitps2,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("23_phi2_by_date.svg", path = "C:/Github/Thesis/figures/TIP23")
+
 
 ### logit PhiPS2 by time scatterplot
 ggplot(data = d23_m, aes(x= time, y = logitps2, 
@@ -2258,18 +2269,155 @@ ggplot(data = d23_m, aes(x= time, y = logitps2,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("23_phi2_by_time.svg", path = "C:/Github/Thesis/figures/TIP23")
 
 ```
 
-### 2.3.2. 2023 Models and Post Hoc Analysis
+### 2.3.2. 2023 Models and Post Hoc Analyses
 ```{r 23models}
-# fruit greenhouse
+# fruit
+## mass
+mod23_mass <- lm(log(mass_mean) ~ treatment, data = d23_fl_means)
+AIC(mod23_mass)
+summary(mod23_mass)
+comps <- glht(mod23_mass, linfct = mcp(treatment = "Tukey"))
+mod23_mass_letters <- cld(comps)$mcletters$Letters
+print(mod23_mass_letters)
+## annotated mass boxplot
+ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    tag="2023",
+    title= str_wrap("Mean Fruit Mass by Inoculation Treatment in Tomato Plants", 60)
+  ) +
+  annotate("text", x=1:4, y=140, label = mod23_mass_letters, size=10, family="open")+
+  ylab("Mass (g)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("23_mass_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       width = 8, height = 6)
+## ber
+mod23_ber <- lm(logit(pber) ~ treatment, data = d23_fg_summary)
+AIC(mod23_ber)
+summary(mod23_ber)
+comps <- glht(mod23_ber, linfct = mcp(treatment = "Tukey"))
+mod23_ber_letters <- cld(comps)$mcletters$Letters
+print(mod23_ber_letters)
 
-# fruit lab
+## sugar
+mod23_sug <- lm(log(sugar_grams_mean) ~ treatment, data = d23_fl_means)
+AIC(mod23_sug)
+summary(mod23_sug)
+comps <- glht(mod23_sug, linfct = mcp(treatment = "Tukey"))
+mod23_sug_letters <- cld(comps)$mcletters$Letters
+print(mod23_sug_letters)
 
-# li-600
+## box plot of total sugar by Treatment
+ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    tag = "2023",
+    title="Mean Sugar Mass by Inoculation Treatment in Tomato"
+  ) +
+    annotate("text", x=1:4, y=9.5, label = mod23_sug_letters, size=10, family="open")+
+  ylab("Sugar (g)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("23_sug_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       width = 8, height = 6)
 
-# multispeq
+## fruit count
+mod23_fc <- glm(fruit_sum ~ treatment, data = d23_fl_summary,
+                family = poisson(link = "log"))
+AIC(mod23_fc)
+summary(mod23_fc)
+glm_pseudoR2(mod23_fc)
+comps <- glht(mod23_fc, linfct = mcp(treatment = "Tukey"))
+mod23_fc_letters <- cld(comps)$mcletters$Letters
+print(mod23_fc_letters)
+
+ggplot(data = d23_fl_summary, aes(x= treatment, y = fruit_sum, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    tag="2023",
+    title="Total Fruit Count by Inoculation Treatment in Tomato Plants"
+  ) +
+  annotate("text", x=1:4, y=35, label = mod23_fc_letters, size=10, family="open")+
+  ylab("Fruit")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+# fluorescence
+## phi2
+mod23_phi2 <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | Device), data = d23_ps2_joined)
+AIC(mod23_phi2)
+summary(mod23_phi2)
+r.squaredGLMM(mod23_phi2)
+comps <- glht(mod23_phi2, linfct = mcp(treatment = "Tukey"))
+mod23_phi2_letters <- cld(comps)$mcletters$Letters
+print(mod23_phi2_letters)
+
+mod23_phi2_2 <- lm(logit(phips2) ~ treatment + daysfromgermination, data = d23_ps2_joined)
+predict_plot(mod23_phi2_2, d23_ps2_joined, phips2, daysfromgermination, treatment, 100,
+             correction = "logit")+
+  ylim(0.5,0.8)+
+    labs(tag = "2023")+
+  ylab("PhiPS2")+
+  xlab("Days From Germination")+
+  guides(fill=guide_legend(title="Treatment"),
+         color=guide_legend(title="Treatment"))+
+  scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
+  scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
+ggsave("23_phi2_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP23",
+       width = 10, height = 6)
+## gsw
+mod23_gsw <- lm(log(gsw) ~ treatment + rh_s, data = d23_li)
+AIC(mod23_gsw)
+summary(mod23_gsw)
+comps <- glht(mod23_gsw, linfct = mcp(treatment = "Tukey"))
+mod23_gsw_letters <- cld(comps)$mcletters$Letters
+print(mod23_gsw_letters)
+predict_plot(mod23_gsw, d23_li, gsw, rh_s, treatment, 100,
+             correction = "exponential")+
+    labs(tag = "2023")+
+  ylab("Stomatal Conductance  (mol m-2 s-1)")+
+  xlab("Relative Humidity (%)")+
+  ylim(0, 2.5)+
+  guides(fill=guide_legend(title="Treatment"),
+         color=guide_legend(title="Treatment"))+
+  scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
+  scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
+ggsave("23_gsw_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP23",
+       width = 10, height = 6)
 
 ```
 
@@ -2281,8 +2429,10 @@ ggplot(data = d23_m, aes(x= time, y = logitps2,
 ### PDF, CDF, and KS test
 multiPDF_plot(d24_f$mass, 100, "all", a_palette, "mass")+
   labs(tag="2024")
+ggsave("24_mass_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
 multiCDF_plot(d24_f$mass, 100, "all", a_palette, "mass")+
   labs(tag="2024")
+ggsave("24_mass_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
 multiKS_cont(d24_f$mass, "all")
 
 ## check for heteroscedasticity
@@ -2334,6 +2484,7 @@ ggplot(data = d24_f, aes(x= treatment, y = mass,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("24_mass_by_ber.svg", path = "C:/Github/Thesis/figures/TIP24")
 
 ## summarized fruit graphs
 ### box plot of mean mass by treatment
@@ -2356,10 +2507,11 @@ ggplot(data = d24_f_means, aes(x= treatment, y = mass_mean,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("24_mass_mean_box.svg", path = "C:/Github/Thesis/figures/TIP24")
 
 
 ### box plot of mean sugar by treatment
-ggplot(data = d24_f_means, aes(x= treatment, y = sugar_grams_mean, 
+ggplot(data = d24_f_means, aes(x= treatment, y = sugar_avg_mean, 
                          fill=treatment, color=treatment)) +
   geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
   geom_jitter( width=.15, height=0)+
@@ -2367,9 +2519,9 @@ ggplot(data = d24_f_means, aes(x= treatment, y = sugar_grams_mean,
   scale_color_manual(values=four_colors)+
   labs(
     tag="2024",
-    title= str_wrap("Mean Sugar Mass In Fruit by Inoculation Treatment in Tomato", 60)
+    title= str_wrap("Mean Sugar Content In Fruit by Inoculation Treatment in Tomato", 60)
   ) +
-  ylab("Mass (g)")+
+  ylab("Sugar (%)")+
   xlab("Treatment")+
   theme_bw()+
   theme(
@@ -2378,6 +2530,8 @@ ggplot(data = d24_f_means, aes(x= treatment, y = sugar_grams_mean,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("24_sugar_mean_box.svg", path = "C:/Github/Thesis/figures/TIP24")
+
 
 ### box plot of percent BER by treatment
 ggplot(data = d24_f_summary, aes(x= treatment, y = pber, 
@@ -2399,6 +2553,8 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = pber,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("24_ber_box.svg", path = "C:/Github/Thesis/figures/TIP24")
+
 
 ### box plot of total fruit mass by treatment
 ggplot(data = d24_f_summary, aes(x= treatment, y = mass_sum, 
@@ -2421,7 +2577,7 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = mass_sum,
     title = element_text(size=title_size, family="open", face="bold")
   )
 
-### box plot of percent BER by treatment
+### box plot of fruit count by treatment
 ggplot(data = d24_f_summary, aes(x= treatment, y = fruit_sum, 
                          fill=treatment, color=treatment)) +
   geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
@@ -2441,13 +2597,17 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = fruit_sum,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+ggsave("24_fruit_count.svg", path = "C:/Github/Thesis/figures/TIP24")
 
 ## sugar
 ### PDF, CDF, and KS test
 multiPDF_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")+
   labs(tag="2024")
+ggsave("24_sug_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
 multiCDF_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")+
   labs(tag="2024")
+ggsave("24_sug_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
+
 multiKS_cont(filter(d24_f, sugar_grams >0)$sugar_grams, "all")
 
 ## check for heteroscedasticity
@@ -2516,27 +2676,7 @@ ggplot(data = d24_f, aes(x= mass, y = sugar_avg,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
-
-## box plot of mean sugar by Treatment
-ggplot(data = d24_f_means, aes(x= treatment, y = sugar_grams_mean, 
-                         fill=treatment, color=treatment)) +
-  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
-  geom_jitter( width=.15, height=0)+
-  scale_fill_manual(values=four_colors)+
-  scale_color_manual(values=four_colors)+
-  labs(
-    tag = "2024",
-    title="Mean Sugar % by Inoculation Treatment in Tomato"
-  ) +
-  ylab("Sugar %")+
-  xlab("Treatment")+
-  theme_bw()+
-  theme(
-    legend.position="none",
-    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
-    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
-    title = element_text(size=title_size, family="open", face="bold")
-  )
+ggsave("24_sug_by_mass.svg", path = "C:/Github/Thesis/figures/TIP24")
 
 ## box plot of total sugar by Treatment
 ggplot(data = d24_f_summary_sugar, aes(x= treatment, y = sugar_grams_sum, 
@@ -2561,10 +2701,12 @@ ggplot(data = d24_f_summary_sugar, aes(x= treatment, y = sugar_grams_sum,
 # li-600
 
 # PDF, CDF, and KS test
-multiPDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")+
+multiPDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)+
     labs(tag="2024")
-multiCDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")+
+ggsave("24_gsw_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
+multiCDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)+
     labs(tag="2024")
+ggsave("24_gsw_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
 multiKS_cont(filter(d24_li, gsw >0)$gsw, "all")
 
 # check for heteroscedasticity
@@ -2779,134 +2921,107 @@ ggplot(data = d24_ps2_joined, aes(x= time, y = logitps2,
 ```{r 24models}
 # fruit
 ## ber
-d24_ber_mod <- lm(logit(pber) ~ treatment, data=d24_f_summary)
-summary(d24_ber_mod)
+mod24_ber <- lm(logit(pber) ~ treatment, data=d24_f_summary)
+AIC(mod24_ber)
+summary(mod24_ber)
 
 ## mass
-d24_mass_mod <- lm(log(mass) ~ treatment + daysfromgermination, data=d24_f)
-summary(d24_mass_mod)
-confint(d24_mass_mod)
-AIC(d24_mass_mod)
-comps <- glht(d24_mass_mod, linfct=mcp(treatment="Tukey"))
-cld(comps)
-
-predict_groupR(d24_mass_mod, d24_f, daysfromgermination, mass,
-               treatment, 100, correction = "exponential", pallt = a_palette)+
-  ylab("Mass (g)")+
-  xlab("Days From Germination")+
-  theme_bw()+
-  guides(
-    fill = guide_legend(title="Treatment"),
-    color= guide_legend(title="Treatment"))+
-  theme(
-    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
-    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
-    title = element_text(size=title_size, family="open", face="bold"),
-    plot.subtitle = element_text(size=subtitle_size, face="italic"))
+mod24_mass <- lm(log(mass_mean) ~ treatment, data=d24_f_means)
+AIC(mod24_mass)
+summary(mod24_mass)
+confint(mod24_mass)
 
 ## sugar
-d24_sugar_mod2 <- lm(log(sugar_avg)~treatment + daysfromgermination,
+mod24_sug <- lm(log(sugar_avg)~treatment + daysfromgermination,
                       data=na.omit(d24_f))
-summary(d24_sugar_mod2)
-AIC(d24_sugar_mod2)
-confint(d24_sugar_mod2)
-comps <- glht(d24_sugar_mod2, linfct=mcp(treatment="Tukey"))
+summary(mod24_sug)
+AIC(mod24_sug)
+confint(mod24_sug)
+comps <- glht(mod24_sug, linfct=mcp(treatment="Tukey"))
 cld(comps)
 
-predict_groupR(d24_sugar_mod2, na.omit(d24_f), daysfromgermination, sugar_avg,
-               treatment, 100, interval = "confidence", correction = "exponential", pallt = a_palette)+
+predict_plot(mod24_sug, na.omit(d24_f), sugar_avg, daysfromgermination, treatment,
+             100, correction = "exponential")+
   ylab("Sugar (%)")+
   xlab("Days From Germination")+
-  theme_bw()+
   guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
-  theme(
-    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
-    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
-    title = element_text(size=title_size, family="open", face="bold"),
-    plot.subtitle = element_text(size=subtitle_size, face="italic"))
+  scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
+  scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
+ggsave("24_sug_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP24",
+       width = 10, height = 6)
 
 # fluorescence
 ## gsw
-d24_gsw_mod <- glm(gsw~treatment + daysfromgermination,
-                     data = filter(d24_li, gsw>0), family = Gamma(link="log"))
-summary(d24_gsw_mod)
-glm_pseudoR2(d24_gsw_mod)
+mod24_gsw <- lm(log(gsw)~treatment + rh_s, data = filter(d24_li, gsw>0))
+AIC(mod24_gsw)
+summary(mod24_gsw)
+comps <- glht(mod24_gsw, linfct = mcp(treatment = "Tukey"))
+mod24_gsw_letters <- cld(comps)$mcletters$Letters
+print(mod24_gsw_letters)
 
-d24_gsw_mod2 <- glm(gsw~treatment + rh_s,
-                     data = filter(d24_li, gsw>0), family = Gamma(link="log"))
-summary(d24_gsw_mod2)
-glm_pseudoR2(d24_gsw_mod2)
-
-comps <- glht(d24_gsw_mod2, linfct=mcp(treatment="Tukey"))
-cld(comps)
-
-predict_groupR(d24_gsw_mod2, dat = filter(d24_li, gsw>0), rh_s, gsw,
-               treatment, 100, pallt = a_palette)+
-  ylab("Stomatal Conductance")+
-  xlab("Relative Humidity (%)")+
-  theme_bw()+
+predict_plot(mod24_gsw, filter(d24_li, gsw>0), gsw, rh_s, treatment,
+             100, correction = "exponential")+
+  ylab("Stomatal Conductance (mol m-2 s-1)")+
+  xlab("Days From Germination")+
+  ylim(0,2)+
   guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
-  theme(
-    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
-    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
-    title = element_text(size=title_size, family="open", face="bold"),
-    plot.subtitle = element_text(size=subtitle_size, face="italic"))
-
+  scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
+  scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
+ggsave("24_gsw_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP24",
+       width = 10, height = 6)
 
 ## phips2
-d24_ps2_mod <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | Device),
+mod24_ps2 <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | Device),
                        data = d24_ps2_joined)
-summary(d24_ps2_mod)
-AIC(d24_ps2_mod)
-r.squaredGLMM(d24_ps2_mod)
-comps <- glht(d24_ps2_mod, linfct=mcp(treatment="Tukey"))
-cld(comps)
+summary(mod24_ps2)
+AIC(mod24_ps2)
+r.squaredGLMM(mod24_ps2)
+comps <- glht(mod24_ps2, linfct=mcp(treatment="Tukey"))
+mod24_ps2_letters <- cld(comps)$mcletters$Letters
+print(mod24_ps2_letters)
 
+mod24_ps2_2 <- lm(logit(phips2)~treatment+daysfromgermination, data=d24_ps2_joined)
+predict_plot(mod24_ps2_2, d24_ps2_joined, phips2, daysfromgermination, treatment, 100, correction = "logit")+
+  ylab("Photosystem II Efficiency (PhiPS2)")+
+  xlab("Days From Germination")+
+  ylim(0.55, 0.8)+
+  guides(
+    fill = guide_legend(title="Treatment"),
+    color= guide_legend(title="Treatment"))+
+  scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
+  scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
+ggsave("24_phi2_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP24",
+       width = 10, height = 6)
 
-### box plot of logit PhiPS2 by treatment with annotations
+### box plot of logit PhiPS2 by treatment
 ggplot(data = d24_ps2_joined, aes(x= treatment, y = phips2, 
                          fill=treatment, color=treatment, shape = Device)) +
   geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
   geom_jitter( width=.15, height=0)+
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
+  labs(
+    tag="2024",
+    title="PhiPS2 by Inoculation Treatment in Tomato"
+  ) +
+  ylab("Photosystem II Efficiency (PhiPS2)")+
+  xlab("Treatment")+
+  annotate("text", x=1:4, y=0.8, label = mod24_ps2_letters, size=10, family="open")+
   ylim(0.55, 0.8)+
-  guides(
+  theme_bw()+
+    guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
-  annotate("text", x=1:4, y=.8, label = c("a", "b", "a", "b"), size=10, family="open")+
-  labs(
-    title="PhiPS2 by Inoculation Treatment and Device in Tomato Plant"
-  ) +
-  ylab("PhiPS2")+
-  xlab("Treatment")+
-  theme_bw()+
   theme(
+    legend.position="right",
     text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
-
-### a worse model, but decent for visualizing the predictions
-d24_ps2_mod2 <- lm(logit(phips2) ~ treatment + daysfromgermination,
-                       data = d24_ps2_joined)
-predict_groupR(d24_ps2_mod2, d24_ps2_joined, daysfromgermination, phips2,
-               treatment, 100, correction = "logit", pallt = a_palette)+
-  ylab("Photosystem II Efficiency (PhiPS2)")+
-  xlab("Days From Germination")+
-  theme_bw()+
-  ylim(0.55,0.8)+
-  guides(
-    fill = guide_legend(title="Treatment"),
-    color= guide_legend(title="Treatment"))+
-  theme(
-    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
-    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
-    title = element_text(size=title_size, family="open", face="bold"),
-    plot.subtitle = element_text(size=subtitle_size, face="italic"))
-
+ggsave("24_phi2_box_annotates.svg", path = "C:/Github/Thesis/figures/TIP24",
+       width = 8, height = 6)
 ```
