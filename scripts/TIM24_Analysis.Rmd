@@ -39,13 +39,13 @@ font_add_google("Montserrat", family = "mont")
 showtext_auto()
 # font sizes
 ## title
-title_size = 24
+title_size = 16
 ## subtitle
-subtitle_size = 20
+subtitle_size = 12
 ## caption
-caption_size = 16
+caption_size = 10
 ## text
-text_size = 16
+text_size = 10
 
 # custom shapes
 four_shapes = c(15,16,17,23)
@@ -68,6 +68,7 @@ li_data_file <- "C:/Github/Thesis/data/TIM/TIM24_Fluoro.csv"
 li_data <- read.csv(li_data_file)[,c(2,3,7,8,9,10,17,28,32,34,35,36,39,40)] %>%
   filter(leak_pct<10) %>%
   mutate(Date = parse_date_time(Date, orders = "mdy"),
+         nDate = as.numeric(as.Date(Date)),
          Time = parse_date_time(Time, orders = "T"),
          plant = as.factor(paste(Column, Row)),
          Treatment = factor(Treatment, 
@@ -89,6 +90,7 @@ li_data <- read.csv(li_data_file)[,c(2,3,7,8,9,10,17,28,32,34,35,36,39,40)] %>%
 h_data_file <- "C:/Github/Thesis/data/TIM/TIM24_Height.csv"
 h_data <- read.csv(h_data_file) %>%
   mutate(Date = parse_date_time(Date, orders = "mdy"),
+         nDate = as.numeric(as.Date(Date)),
          Height = Height + 0.01,
          Treatment = factor(Treatment, levels = treatment_order),
          plant = as.factor(paste(Column, Row)))
@@ -272,12 +274,15 @@ ggplot(data = li_data, aes(x= MinutesFromStart, y = logitPS2, shape = Treatment,
 ### 2.1.2. Fluoro Models and Post Hoc Analysis
 ```{r fluoro_models}
 ## gsw could be normal or gamma
-summary(model_gsw_n<- lmer(
-  gsw ~ Treatment + (1 | Date),
-  data = li_data))
+model_gsw<- lm(log(gsw) ~ Treatment + rh_s, data = li_data)
+AIC(model_gsw)
+summary(model_gsw)
 
-summary(model_fl_phi2<- lmer(
-  logitPS2 ~ Treatment + (1 | Date),
+predict_plot(model_gsw, li_data, gsw, rh_s, Treatment,
+             correction = "exponential")
+
+summary(model_fl_phi2<- lm(
+  logitPS2 ~ Treatment + Date,
   data = li_data))
 
 ```
@@ -330,8 +335,8 @@ ggplot(data=h_data, aes(x=Date, y=Height, color=Treatment))+
     title = element_text(size=title_size, family="open", face="bold")
   )
 
-summary(model_h <- lmer(
-  Height ~ Treatment + (1 | Date),
+summary(model_h <- lm(
+  Height ~ Treatment,
   data = h_data))
 
 comps <- glht(model_h, linfct = mcp(Treatment = "Tukey"))

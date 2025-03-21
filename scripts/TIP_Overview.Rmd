@@ -706,46 +706,47 @@ colnames(d23_st) <- tolower(colnames(d23_st))
 d24_f <- read.csv(d24_f_file) %>%
   filter(mass>0)%>%
   rename(pot = plant) %>%
-  mutate(row_let = case_when(
+  mutate(row = case_when(
     row==1~"A",
     row==2~"B",
     row==3~"C",
     row==4~"D"),
     treatment = case_when(
-      row==1~"Control",
-      row==2~"Transplantation",
-      row==3~"Germination",
-      row==4~"Germ+Trans",
+      row=="A"~"Control",
+      row=="B"~"Transplantation",
+      row=="C"~"Germination",
+      row=="D"~"Germ+Trans",
       TRUE~NA),
     transplantation = case_when(
-      row_let=="A"~FALSE,
-      row_let=="B"~TRUE,
-      row_let=="C"~FALSE,
-      row_let=="D"~TRUE
+      row=="A"~FALSE,
+      row=="B"~TRUE,
+      row=="C"~FALSE,
+      row=="D"~TRUE
     ),
     germination = case_when(
-      row_let=="A"~FALSE,
-      row_let=="B"~FALSE,
-      row_let=="C"~TRUE,
-      row_let=="D"~TRUE
+      row=="A"~FALSE,
+      row=="B"~FALSE,
+      row=="C"~TRUE,
+      row=="D"~TRUE
     ),
     fruit = 1,
     date_analysis = parse_date_time(date_analysis, orders = "mdy"),
     date_harvest = parse_date_time(date_harvest, orders = "mdy"),
     daysfromharvesttoanalysis = as.numeric(round(difftime(date_analysis, date_harvest, units = c("days")), 0)),
     daysfromgermination = as.numeric(round(difftime(date_analysis, germdate24, units = c("days")), 0)),
-    plant = as.factor(paste0(row_let, pot)),
+    plant = as.factor(paste0(row, pot)),
     pot = as.factor(pot),
-    row_let = as.factor(row_let),
     treatment = factor(treatment, levels = treatment_order24),
     plant = factor(plant, levels = plant_order24),
-    fBER = as.factor(BER),
-    ffungus = as.factor(fungus),
-    fcracking = as.factor(cracking),
+    BER = as.logical(BER),
+    fungus = as.logical(fungus),
+    cracking = as.logical(cracking),
     ripeness = abs(1 - round(penetrometer/max(na.omit(penetrometer)), 2)),
     sugar_grams = (sugar_avg/100)*mass
   )
 colnames(d24_f) <- tolower(colnames(d24_f))
+
+d24_f_export <- d24_f[,-c(8,9)]
 
 ### Make summary dataframe with mean and sd of mass and sugar by plant.
 d24_f_means <- na.omit(d24_f) %>%
@@ -811,6 +812,9 @@ d24_li <- read.csv(d24_li_file, stringsAsFactors = F) %>%
   )
 d24_li <- d24_li[,c(2,3,7,8,10,17,28,32,34,35,36,39,40,114,115,116,117,118,119,120,121,122)]
 colnames(d24_li) <- tolower(colnames(d24_li))
+
+d24_li_export <- d24_li[,-c(2,3)] %>%
+  mutate(pot = as.factor(pot))
 
 ## multispeq
 d24_m <- read.csv(d24_m_file) %>%
@@ -2305,7 +2309,7 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_mass_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
-       width = 8, height = 6)
+       width = 10, height = 8)
 ## ber
 mod23_ber <- lm(logit(pber) ~ treatment, data = d23_fg_summary)
 AIC(mod23_ber)
@@ -2344,7 +2348,7 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_sug_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
-       width = 8, height = 6)
+       width = 10, height = 8)
 
 ## fruit count
 mod23_fc <- glm(fruit_sum ~ treatment, data = d23_fl_summary,
@@ -2378,7 +2382,7 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = fruit_sum,
   )
 # fluorescence
 ## phi2
-mod23_phi2 <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | Device), data = d23_ps2_joined)
+mod23_phi2 <- lmer(logit(phips2) ~ treatment + AmbientLight + (1 | Device), data = d23_ps2_joined)
 AIC(mod23_phi2)
 summary(mod23_phi2)
 r.squaredGLMM(mod23_phi2)
@@ -2462,7 +2466,7 @@ ggplot(data = d24_f, aes(x= treatment, y = mass,
 
 ## box plot by Treatment colored by BER
 ggplot(data = d24_f, aes(x= treatment, y = mass, 
-                         fill=fber, color=fber)) +
+                         fill=ber, color=ber)) +
   geom_boxplot(alpha=.5, width=0.6, outliers = TRUE)+
   scale_fill_manual(values=two_colors)+
   scale_color_manual(values=two_colors)+
@@ -2932,6 +2936,11 @@ summary(mod24_mass)
 confint(mod24_mass)
 
 ## sugar
+mod24_sug_bp <- lm(sugar_avg_mean ~ treatment, data=d24_f_means)
+summary(mod24_sug_bp)
+comps <- glht(mod24_sug_bp, linfct=mcp(treatment="Tukey"))
+cld(comps)
+
 mod24_sug <- lm(log(sugar_avg)~treatment + daysfromgermination,
                       data=na.omit(d24_f))
 summary(mod24_sug)
@@ -2954,7 +2963,7 @@ ggsave("24_sug_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP24",
 
 # fluorescence
 ## gsw
-mod24_gsw <- lm(log(gsw)~treatment + rh_s, data = filter(d24_li, gsw>0))
+mod24_gsw <- lm(log(gsw) ~ treatment + rh_s, data = filter(d24_li, gsw>0))
 AIC(mod24_gsw)
 summary(mod24_gsw)
 comps <- glht(mod24_gsw, linfct = mcp(treatment = "Tukey"))
@@ -2964,7 +2973,7 @@ print(mod24_gsw_letters)
 predict_plot(mod24_gsw, filter(d24_li, gsw>0), gsw, rh_s, treatment,
              100, correction = "exponential")+
   ylab("Stomatal Conductance (mol m-2 s-1)")+
-  xlab("Days From Germination")+
+  xlab("Relative Humidity (%)")+
   ylim(0,2)+
   guides(
     fill = guide_legend(title="Treatment"),
@@ -2975,7 +2984,7 @@ ggsave("24_gsw_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP24",
        width = 10, height = 6)
 
 ## phips2
-mod24_ps2 <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | Device),
+mod24_ps2 <- lmer(logit(phips2) ~ treatment + AmbientLight + (1 | Device),
                        data = d24_ps2_joined)
 summary(mod24_ps2)
 AIC(mod24_ps2)
@@ -3022,6 +3031,6 @@ ggplot(data = d24_ps2_joined, aes(x= treatment, y = phips2,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
-ggsave("24_phi2_box_annotates.svg", path = "C:/Github/Thesis/figures/TIP24",
-       width = 8, height = 6)
+ggsave("24_phi2_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       width = 10, height = 8)
 ```
