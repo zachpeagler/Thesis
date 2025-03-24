@@ -11,7 +11,7 @@ What's the best way to assess if a model is accurate?
 everything except for treatment should be a random effect because I don't care about them, correct?
 
 when using random effects, if the random effect (RE) is continuous, should I get a random slope for each treatment (RE|Treatment)? or is there a better way to do it?
-
+> don't do this! random effects cannot be continuous
 
 ##
 try log transforming y variable
