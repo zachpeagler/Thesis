@@ -41,7 +41,7 @@ require(scico)
 require(ggpubr)
 ## custom package
 require(devtools)
-install_github("zachpeagler/ztils")
+install_github("zachpeagler/ztils", upgrade = "never")
 require(ztils)
 ```
 
@@ -900,11 +900,9 @@ pwr21 <- round(pwr.anova.test(k=4, n=7, f=0.25, sig.level=0.5)$power, 4)
 # fruit
 ## mass
 ### PDF, CDF, and KS test
-multiPDF_plot(d21_f$mass, 100, "all", a_palette)+
-  labs(tag="2021")
+multiPDF_plot(d21_f$mass, 100, "all", a_palette)
 ggsave("21mass_PDF.svg", path = "C:/Github/Thesis/figures/TIP21")
-multiCDF_plot(d21_f$mass, 100, "all", a_palette)+
-  labs(tag="2021")
+multiCDF_plot(d21_f$mass, 100, "all", a_palette)
 ggsave("21mass_CDF.svg", path = "C:/Github/Thesis/figures/TIP21")
 
 multiKS_cont(d21_f$mass, "all")
@@ -923,7 +921,6 @@ ggplot(data = d21_f, aes(x= treatment, y = mass,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2021",
     title="Fruit Mass by Inoculation Treatments in Tomato"
   ) +
   ylab("Mass (g)")+
@@ -946,7 +943,6 @@ ggplot(data = d21_f, aes(x= treatment, y = mass,
          color=guide_legend(title=str_wrap("Blossom-End Rot", 10))
          )+
   labs(
-    tag="2021",
     title="Fruit Mass by Blossom-End Rot and Inoculation Treatments in Tomato"
   ) +
   ylab("Mass (g)")+
@@ -970,7 +966,6 @@ ggplot(data = d21_f_means, aes(x= treatment, y = mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2021",
     title="Mean Fruit Mass by Inoculation Treatments in Tomato Plants"
   ) +
   ylab("Mass (g)")+
@@ -991,7 +986,6 @@ ggplot(data = d21_f_summary_byplant, aes(x= treatment, y = pber,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2021",
     title=str_wrap("Proportion BER by Inoculation Treatments in Tomato Plants", 40)
   ) +
   ylab("pBER")+
@@ -1736,11 +1730,9 @@ summary(mod22_mps2)
 # fruit greenhouse
 ## mass
 ### PDF, CDF, and KS test
-multiPDF_plot(d23_fg$mass, 100, "all", a_palette, "mass")+
-  labs(tag="2023")
+multiPDF_plot(d23_fg$mass, 100, "all", a_palette, "mass")
 ggsave("23_mass_PDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiCDF_plot(d23_fg$mass, 100, "all", a_palette, "mass")+
-  labs(tag="2023")
+multiCDF_plot(d23_fg$mass, 100, "all", a_palette, "mass")
 ggsave("23_mass_CDF.svg", path = "C:/Github/Thesis/figures/TIP23")
 multiKS_cont(d23_fg$mass, "all")
 
@@ -1758,7 +1750,6 @@ ggplot(data = d23_fg, aes(x= treatment, y = mass,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2023",
     title="Fruit Mass by Inoculation Treatments in Tomato"
   ) +
   ylab("Mass (g)")+
@@ -1781,7 +1772,6 @@ ggplot(data = d23_fg, aes(x= treatment, y = mass,
          color=guide_legend(title=str_wrap("Blossom-End Rot", 10))
          )+
   labs(
-    tag = "2023",
     title="Fruit Mass by Blossom-End Rot and Inoculation Treatments in Tomato"
   ) +
   ylab("Mass (g)")+
@@ -1807,7 +1797,6 @@ ggplot(data = d23_fg_means, aes(x= treatment, y = mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title="Mean Fruit Mass by Inoculation Treatments in Tomato Plants"
   ) +
   ylab("Mass (g)")+
@@ -1828,7 +1817,6 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title= str_wrap("Mean Fruit Mass In Fruit Analyzed for Sugar by Inoculation Treatments in Tomato Plants", 60)
   ) +
   ylab("Mass (g)")+
@@ -1852,7 +1840,6 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title= str_wrap("Mean Sugar Mass In Fruit by Inoculation Treatment in Tomato", 60)
   ) +
   ylab("Mass (g)")+
@@ -1875,7 +1862,6 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = pber,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title="Proportion BER by Inoculation Treatment in Tomato Plants"
   ) +
   ylab("pBER")+
@@ -1897,7 +1883,6 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = mass_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title="Total Fruit Mass by Inoculation Treatment in Tomato Plants"
   ) +
   ylab("Mass (g)")+
@@ -1918,7 +1903,6 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = fruit_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title="Total Fruit Count by Inoculation Treatment in Tomato Plants"
   ) +
   ylab("Fruit")+
@@ -1935,11 +1919,9 @@ ggsave("23_fruit_count.svg", path = "C:/Github/Thesis/figures/TIP23")
 
 ## sugar
 ### PDF, CDF, and KS test
-multiPDF_plot(d23_fl$sugar_grams, 100, "all", a_palette, "sugar")+
-  labs(tag="2023")
+multiPDF_plot(d23_fl$sugar_grams, 100, "all", a_palette, "sugar")
 ggsave("23_sugar_PDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiCDF_plot(d23_fl$sugar_grams, 100, "all", a_palette, "sugar")+
-  labs(tag="2023")
+multiCDF_plot(d23_fl$sugar_grams, 100, "all", a_palette, "sugar")
 ggsave("23_sugar_CDF.svg", path = "C:/Github/Thesis/figures/TIP23")
 multiKS_cont(d23_fl$sugar_grams, "all")
 
@@ -1956,7 +1938,6 @@ ggplot(data = d23_fl, aes(x= treatment, y = sugar_avg,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2023",
     title="Sugar % by Inoculation Treatment in Tomato"
   ) +
   ylab("Sugar %")+
@@ -1977,7 +1958,6 @@ ggplot(data = d23_fl, aes(x= treatment, y = sugar_grams,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2023",
     title="Sugar Mass by Inoculation Treatment in Tomato"
   ) +
   ylab("Sugar (g)")+
@@ -1997,7 +1977,6 @@ ggplot(data = d23_fl, aes(x= mass, y = sugar_avg,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2023",
     title="Sugar by Mass in Inoculated Tomato"
   ) +
   ylab("Sugar %")+
@@ -2019,7 +1998,6 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2023",
     title="Mean Sugar % by Inoculation Treatment in Tomato"
   ) +
   ylab("Sugar %")+
@@ -2042,7 +2020,6 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = sugar_grams_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2023",
     title="Total Sugar Mass by Inoculation Treatment in Tomato"
   ) +
   ylab("Sugar (g)")+
@@ -2057,11 +2034,9 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = sugar_grams_sum,
 # li-600
 
 # PDF, CDF, and KS test
-multiPDF_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")+
-    labs(tag="2023")
+multiPDF_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")
 ggsave("23_gsw_PDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiCDF_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")+
-    labs(tag="2023")
+multiCDF_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")
 ggsave("23_gsw_CDF.svg", path = "C:/Github/Thesis/figures/TIP23")
 multiKS_cont(filter(d23_li, gsw >0)$gsw, "all")
 
@@ -2078,7 +2053,6 @@ ggplot(data = d23_li, aes(x= treatment, y = gsw, fill=treatment, color=treatment
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-        tag="2023",
     title=str_wrap("Stomatal Conductance Across Inoculation Treatments in Tomato", 40)
   ) +
   ylab("Stomatal Conductance (mol m-2 s-1)")+
@@ -2101,7 +2075,6 @@ ggplot(data = d23_li, aes(x=daysfromgermination, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Days From Germination")+
   labs(
-        tag="2023",
     title=str_wrap("Stomatal Conductance By Days From Germination Across Relative Humidity in Tomato", 50)
   )+
     guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 10)))+
@@ -2131,7 +2104,6 @@ ggplot(data = d23_li, aes(x=time, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Time")+
   labs(
-        tag="2023",
     title=str_wrap("Stomatal Conductance By Time Across Date in Tomato", 50)
   )+
     guides(color=guide_legend(title="Date"))+
@@ -2161,7 +2133,6 @@ ggplot(data = d23_li, aes(x=rh_s, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Relative Humidity")+
   labs(
-        tag="2023",
     title=str_wrap("Stomatal Conductance By Relative
                    Humidity Across Inoculation Treatment in Tomato", 50)
   )+
@@ -2187,7 +2158,6 @@ ggplot(data = d23_li, aes(x=minutesfromstart, y = gsw, color = rh_s)) +
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Minutes From Start")+
   labs(
-        tag="2023",
     title=str_wrap("Stomatal Conductance by Minutes From Start Across Relative Humidity in Tomato", 40)
   )+
       guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 8)))+
@@ -2215,7 +2185,6 @@ ggplot(data = d23_m, aes(x= treatment, y = logitps2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title="Logit PhiPS2 by Inoculation Treatment in Tomato"
   ) +
   ylab("PhiPS2")+
@@ -2237,7 +2206,6 @@ ggplot(data = d23_m, aes(x= date, y = logitps2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title="Logit PhiPS2 by Date and Inoculation Treatment in Tomato"
   ) +
   ylab("PhiPS2")+
@@ -2261,7 +2229,6 @@ ggplot(data = d23_m, aes(x= time, y = logitps2,
   scale_color_manual(values=four_colors)+
   scale_x_discrete(guide=guide_axis(check.overlap=TRUE))+
   labs(
-    tag="2023",
     title="Logit PhiPS2 by Time and Inoculation Treatment in Tomato"
   ) +
   ylab("PhiPS2")+
@@ -2295,7 +2262,6 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title= str_wrap("Mean Fruit Mass by Inoculation Treatment in Tomato Plants", 60)
   ) +
   annotate("text", x=1:4, y=140, label = mod23_mass_letters, size=10, family="open")+
@@ -2334,7 +2300,6 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2023",
     title="Mean Sugar Mass by Inoculation Treatment in Tomato"
   ) +
     annotate("text", x=1:4, y=9.5, label = mod23_sug_letters, size=10, family="open")+
@@ -2367,7 +2332,6 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = fruit_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2023",
     title="Total Fruit Count by Inoculation Treatment in Tomato Plants"
   ) +
   annotate("text", x=1:4, y=35, label = mod23_fc_letters, size=10, family="open")+
@@ -2394,9 +2358,9 @@ mod23_phi2_2 <- lm(logit(phips2) ~ treatment + daysfromgermination, data = d23_p
 predict_plot(mod23_phi2_2, d23_ps2_joined, phips2, daysfromgermination, treatment, 100,
              correction = "logit")+
   ylim(0.5,0.8)+
-    labs(tag = "2023")+
   ylab("PhiPS2")+
   xlab("Days From Germination")+
+  labs(title = str_wrap("Real vs Predicted 95% confidence interval for photosystem II efficiency across days from germination and M. oryzae inoculation location in salt stressed tomato plants", 50))+
   guides(fill=guide_legend(title="Treatment"),
          color=guide_legend(title="Treatment"))+
   scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
@@ -2412,9 +2376,9 @@ mod23_gsw_letters <- cld(comps)$mcletters$Letters
 print(mod23_gsw_letters)
 predict_plot(mod23_gsw, d23_li, gsw, rh_s, treatment, 100,
              correction = "exponential")+
-    labs(tag = "2023")+
   ylab("Stomatal Conductance  (mol m-2 s-1)")+
   xlab("Relative Humidity (%)")+
+  labs(title = str_wrap("Real vs Predicted 95% confidence interval for stomatal conductance across relative humidity and M. oryzae inoculation location in salt stressed tomato", 50))+
   ylim(0, 2.5)+
   guides(fill=guide_legend(title="Treatment"),
          color=guide_legend(title="Treatment"))+
@@ -2431,11 +2395,9 @@ ggsave("23_gsw_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP23",
 ```{r 24exploratory}
 ## mass
 ### PDF, CDF, and KS test
-multiPDF_plot(d24_f$mass, 100, "all", a_palette, "mass")+
-  labs(tag="2024")
+multiPDF_plot(d24_f$mass, 100, "all", a_palette, "mass")
 ggsave("24_mass_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
-multiCDF_plot(d24_f$mass, 100, "all", a_palette, "mass")+
-  labs(tag="2024")
+multiCDF_plot(d24_f$mass, 100, "all", a_palette, "mass")
 ggsave("24_mass_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
 multiKS_cont(d24_f$mass, "all")
 
@@ -2451,7 +2413,6 @@ ggplot(data = d24_f, aes(x= treatment, y = mass,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2024",
     title="Fruit Mass by Inoculation Treatments in Tomato"
   ) +
   ylab("Mass (g)")+
@@ -2474,7 +2435,6 @@ ggplot(data = d24_f, aes(x= treatment, y = mass,
          color=guide_legend(title=str_wrap("Blossom-End Rot", 10))
          )+
   labs(
-    tag = "2024",
     title="Fruit Mass by Blossom-End Rot and Inoculation Treatments in Tomato"
   ) +
   ylab("Mass (g)")+
@@ -2499,7 +2459,6 @@ ggplot(data = d24_f_means, aes(x= treatment, y = mass_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2024",
     title= str_wrap("Mean Fruit Mass In Fruit Analyzed for Sugar by Inoculation Treatments in Tomato Plants", 60)
   ) +
   ylab("Mass (g)")+
@@ -2522,7 +2481,6 @@ ggplot(data = d24_f_means, aes(x= treatment, y = sugar_avg_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2024",
     title= str_wrap("Mean Sugar Content In Fruit by Inoculation Treatment in Tomato", 60)
   ) +
   ylab("Sugar (%)")+
@@ -2545,7 +2503,6 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = pber,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2024",
     title="Proportion BER by Inoculation Treatment in Tomato Plants"
   ) +
   ylab("pBER")+
@@ -2568,7 +2525,6 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = mass_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2024",
     title="Total Fruit Mass by Inoculation Treatment in Tomato Plants"
   ) +
   ylab("Mass (g)")+
@@ -2589,7 +2545,6 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = fruit_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2024",
     title="Total Fruit Count by Inoculation Treatment in Tomato Plants"
   ) +
   ylab("Fruit")+
@@ -2605,11 +2560,9 @@ ggsave("24_fruit_count.svg", path = "C:/Github/Thesis/figures/TIP24")
 
 ## sugar
 ### PDF, CDF, and KS test
-multiPDF_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")+
-  labs(tag="2024")
+multiPDF_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")
 ggsave("24_sug_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
-multiCDF_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")+
-  labs(tag="2024")
+multiCDF_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")
 ggsave("24_sug_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
 
 multiKS_cont(filter(d24_f, sugar_grams >0)$sugar_grams, "all")
@@ -2627,7 +2580,6 @@ ggplot(data = d24_f, aes(x= treatment, y = sugar_avg,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2024",
     title="Sugar % by Inoculation Treatment in Tomato"
   ) +
   ylab("Sugar %")+
@@ -2648,7 +2600,6 @@ ggplot(data = d24_f, aes(x= treatment, y = sugar_grams,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2024",
     title="Sugar Mass by Inoculation Treatment in Tomato"
   ) +
   ylab("Sugar (g)")+
@@ -2668,7 +2619,6 @@ ggplot(data = d24_f, aes(x= mass, y = sugar_avg,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2024",
     title="Sugar by Mass in Inoculated Tomato"
   ) +
   ylab("Sugar %")+
@@ -2690,7 +2640,6 @@ ggplot(data = d24_f_summary_sugar, aes(x= treatment, y = sugar_grams_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag = "2024",
     title="Total Sugar Mass by Inoculation Treatment in Tomato"
   ) +
   ylab("Sugar (g)")+
@@ -2705,11 +2654,9 @@ ggplot(data = d24_f_summary_sugar, aes(x= treatment, y = sugar_grams_sum,
 # li-600
 
 # PDF, CDF, and KS test
-multiPDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)+
-    labs(tag="2024")
+multiPDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)
 ggsave("24_gsw_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
-multiCDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)+
-    labs(tag="2024")
+multiCDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)
 ggsave("24_gsw_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
 multiKS_cont(filter(d24_li, gsw >0)$gsw, "all")
 
@@ -2726,7 +2673,6 @@ ggplot(data = d24_li, aes(x= treatment, y = gsw, fill=treatment, color=treatment
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-        tag="2024",
     title=str_wrap("Stomatal Conductance Across Inoculation Treatments in Tomato", 40)
   ) +
   ylab("Stomatal Conductance (mol m-2 s-1)")+
@@ -2749,7 +2695,6 @@ ggplot(data = d24_li, aes(x=daysfromgermination, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Days From Germination")+
   labs(
-        tag="2024",
     title=str_wrap("Stomatal Conductance By Days From Germination Across Relative Humidity in Tomato", 50)
   )+
     guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 10)))+
@@ -2778,7 +2723,6 @@ ggplot(data = d24_li, aes(x=time, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Time")+
   labs(
-        tag="2024",
     title=str_wrap("Stomatal Conductance By Time Across Date in Tomato", 50)
   )+
     guides(color=guide_legend(title="Date"))+
@@ -2807,7 +2751,6 @@ ggplot(data = d24_li, aes(x=rh_s, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Relative Humidity")+
   labs(
-        tag="2024",
     title=str_wrap("Stomatal Conductance By Relative
                    Humidity Across Inoculation Treatment in Tomato", 50)
   )+
@@ -2833,7 +2776,6 @@ ggplot(data = d24_li, aes(x=minutesfromstart, y = gsw, color = rh_s)) +
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Minutes From Start")+
   labs(
-        tag="2024",
     title=str_wrap("Stomatal Conductance by Minutes From Start Across Relative Humidity in Tomato", 40)
   )+
       guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 8)))+
@@ -2861,7 +2803,6 @@ ggplot(data = d24_m, aes(x= treatment, y = logitps2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2024",
     title="Logit PhiPS2 by Inoculation Treatment in Tomato"
   ) +
   ylab("PhiPS2")+
@@ -2883,7 +2824,6 @@ ggplot(data = d24_m, aes(x= date, y = logitps2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2024",
     title="Logit PhiPS2 by Date and Inoculation Treatment in Tomato"
   ) +
   ylab("PhiPS2")+
@@ -2906,7 +2846,6 @@ ggplot(data = d24_ps2_joined, aes(x= time, y = logitps2,
   scale_color_manual(values=four_colors)+
   scale_x_discrete(guide=guide_axis(check.overlap=TRUE))+
   labs(
-    tag="2024",
     title="Logit PhiPS2 by Time and Inoculation Treatment in Tomato"
   ) +
   ylab("PhiPS2")+
@@ -2975,6 +2914,7 @@ predict_plot(mod24_gsw, filter(d24_li, gsw>0), gsw, rh_s, treatment,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Relative Humidity (%)")+
   ylim(0,2)+
+  labs(title = str_wrap("Real vs Predicted 95% confidence interval for stomatal conductance across relative humidity and microbial consortium inoculation timing in tomato plants", 50))+
   guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
@@ -2998,6 +2938,7 @@ predict_plot(mod24_ps2_2, d24_ps2_joined, phips2, daysfromgermination, treatment
   ylab("Photosystem II Efficiency (PhiPS2)")+
   xlab("Days From Germination")+
   ylim(0.55, 0.8)+
+  labs(title = str_wrap("Real vs Predicted 95% confidence interval for photosystem II efficiency across days from germination and microbial consortium inoculation timing in tomato plants", 50))+
   guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
@@ -3014,7 +2955,6 @@ ggplot(data = d24_ps2_joined, aes(x= treatment, y = phips2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    tag="2024",
     title="PhiPS2 by Inoculation Treatment in Tomato"
   ) +
   ylab("Photosystem II Efficiency (PhiPS2)")+
