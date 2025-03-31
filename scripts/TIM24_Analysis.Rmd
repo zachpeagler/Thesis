@@ -52,10 +52,30 @@ four_shapes = c(15,16,17,23)
 
 ##### Experimental Constants
 
-treatment_order <- c("Control",
+tim_germ_date <- "2024-04-01"
+
+tim_treatment_order <- c("Control",
                      "Liquid",
                      "CG",
                      "CBG")
+
+tim_levels <- c("A1", "A2", "A3", "A4", "A5", "A6",
+                   "A7", "A8", "A9", "A10", "A11", "A12", "A13",
+                   "B1", "B2", "B3", "B4", "B5", "B6",
+                   "B7", "B8", "B9", "B10", "B11", "B12", "B13",
+                   "C1", "C2", "C3", "C4", "C5", "C6",
+                   "C7", "C8", "C9", "C10", "C11", "C12", "C13",
+                   "D1", "D2", "D3", "D4", "D5", "D6",
+                   "D7", "D8", "D9", "D10", "D11", "D12", "D13",
+                   "E1", "E2", "E3", "E4", "E5", "E6",
+                   "E7", "E8", "E9", "E10", "E11", "E12",
+                   "F1", "F2", "F3", "F4", "F5", "F6",
+                   "F7", "F8", "F9", "F10", "F11", "F12",
+                   "G1", "G2", "G3", "G4", "G5", "G6",
+                   "G7", "G8", "G9", "G10", "G11", "G12",
+                   "H1", "H2", "H3", "H4", "H5", "H6",
+                   "H7", "H8", "H9", "H10", "H11", "H12"
+                )
 
 ```
 
@@ -66,21 +86,54 @@ treatment_order <- c("Control",
 
 li_data_file <- "C:/Github/Thesis/data/TIM/TIM24_Fluoro.csv"
 li_data <- read.csv(li_data_file)[,c(2,3,7,8,9,10,17,28,32,34,35,36,39,40)] %>%
-  filter(leak_pct<10) %>%
+  filter(leak_pct<10 & gsw > 0) %>%
   mutate(Date = parse_date_time(Date, orders = "mdy"),
-         nDate = as.numeric(as.Date(Date)),
+         DaysFromGermination = as.numeric(round(difftime(Date, tim_germ_date, units = c("days")), 0)),
+         Date = as.factor(as.Date(Date)),
          Time = parse_date_time(Time, orders = "T"),
-         plant = as.factor(paste(Column, Row)),
+         Time = as.factor(format(Time, "%H:%M:%S")),
          Treatment = factor(Treatment, 
-                            levels = treatment_order),
-         logitPS2 = logit(PhiPS2, FALSE)
+                            levels = tim_treatment_order),
+         Inoculation = case_when(
+           Treatment=="Control"~FALSE,
+           Treatment=="Liquid"~TRUE,
+           Treatment=="CG"~FALSE,
+           Treatment=="CBG"~TRUE
+         ),
+         Chitosan = case_when(
+           Treatment=="Control"~FALSE,
+           Treatment=="Liquid"~FALSE,
+           Treatment=="CG"~TRUE,
+           Treatment=="CBG"~TRUE
+         ),
+         Column = case_when(
+           Column==1~"A",
+           Column==2~"B",
+           Column==3~"C",
+           Column==4~"D",
+           Column==5~"E",
+           Column==6~"F",
+           Column==7~"G",
+           Column==8~"H",
+         ),
+         Plant = paste0(Column, Row),
+         LogitPhiPS2 = logit(PhiPS2, FALSE),
+         Column = as.factor(Column),
+         Row = as.factor(Row),
+         Plant = as.factor(Plant),
+         Plant = factor(Plant, levels = tim_levels),
+         P_atm = P_atm * 100
   ) %>%
-  group_by(Date) %>%
-  mutate(MinutesFromStart = round(difftime(Time, min(Time), units = "mins"), 2)) %>%
-  ungroup() %>%
-  mutate(
-    Time = format(Time, "%H:%M:%S")
-  )
+  rename(Pot=Column)
+
+data_tim_fluoro <- li_data[,c(5,16,17,1,2,15,3,4,18,9,10,12,14,11,6,8,19)] %>%
+  rename(AmbientHumidity = rh_s,
+         AmbientTemperature = Tref,
+         AmbientPressure = P_atm,
+         AmbientLight = Qamb,
+         LeafTemperature = Tleaf
+         )
+
 
 ```
 
@@ -90,10 +143,39 @@ li_data <- read.csv(li_data_file)[,c(2,3,7,8,9,10,17,28,32,34,35,36,39,40)] %>%
 h_data_file <- "C:/Github/Thesis/data/TIM/TIM24_Height.csv"
 h_data <- read.csv(h_data_file) %>%
   mutate(Date = parse_date_time(Date, orders = "mdy"),
-         nDate = as.numeric(as.Date(Date)),
-         Height = Height + 0.01,
-         Treatment = factor(Treatment, levels = treatment_order),
-         plant = as.factor(paste(Column, Row)))
+         DaysFromGermination = as.numeric(round(difftime(Date, tim_germ_date, units = c("days")), 0)),
+         Date = as.factor(as.Date(Date)),
+         Column = case_when(
+           Column==1~"A",
+           Column==2~"B",
+           Column==3~"C",
+           Column==4~"D",
+           Column==5~"E",
+           Column==6~"F",
+           Column==7~"G",
+           Column==8~"H",
+         ),
+         Inoculation = case_when(
+           Treatment=="Control"~FALSE,
+           Treatment=="Liquid"~TRUE,
+           Treatment=="CG"~FALSE,
+           Treatment=="CBG"~TRUE
+         ),
+         Chitosan = case_when(
+           Treatment=="Control"~FALSE,
+           Treatment=="Liquid"~FALSE,
+           Treatment=="CG"~TRUE,
+           Treatment=="CBG"~TRUE
+         ),
+         Treatment = factor(Treatment, levels = tim_treatment_order),
+         Plant = as.factor(paste0(Column, Row)),
+         Plant = factor(Plant, levels = tim_levels),
+         Row = as.factor(Row),
+         Column = as.factor(Column)
+  ) %>%
+  rename(Pot = Column)
+
+data_tim_height <- h_data[,c(3,7,8,4,6,1,2,9,5)]
 
 ```
 
@@ -101,8 +183,38 @@ h_data <- read.csv(h_data_file) %>%
 ```{r DS_data, include=TRUE}
 DS_data_file <- "C:/Github/Thesis/data/TIM/TIM24_DS.csv"
 DS_data <- read.csv(DS_data_file) %>%
-  mutate(plant = as.factor(paste(Column, Row)),
-         Treatment = factor(Treatment, levels = treatment_order))
+  mutate(
+        Column = case_when(
+           Column==1~"A",
+           Column==2~"B",
+           Column==3~"C",
+           Column==4~"D",
+           Column==5~"E",
+           Column==6~"F",
+           Column==7~"G",
+           Column==8~"H",
+         ),
+         Inoculation = case_when(
+           Treatment=="Control"~FALSE,
+           Treatment=="Liquid"~TRUE,
+           Treatment=="CG"~FALSE,
+           Treatment=="CBG"~TRUE
+         ),
+         Chitosan = case_when(
+           Treatment=="Control"~FALSE,
+           Treatment=="Liquid"~FALSE,
+           Treatment=="CG"~TRUE,
+           Treatment=="CBG"~TRUE
+         ),
+         Treatment = factor(Treatment, levels = tim_treatment_order),
+         Plant = as.factor(paste0(Column, Row)),
+         Plant = factor(Plant, levels = tim_levels),
+         Row = as.factor(Row),
+         Column = as.factor(Column)
+  ) %>%
+  rename(Pot = Column)
+
+data_tim_ds <- DS_data[,c(3,10,11,1,2,12,4,5,6,7,8,9)]
 
 ```
 
