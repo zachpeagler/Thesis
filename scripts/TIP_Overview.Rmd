@@ -2360,7 +2360,7 @@ predict_plot(mod23_phi2_2, d23_ps2_joined, phips2, daysfromgermination, treatmen
   ylim(0.5,0.8)+
   ylab("PhiPS2")+
   xlab("Days From Germination")+
-  labs(title = str_wrap("Real vs Predicted 95% confidence interval for photosystem II efficiency across days from germination and M. oryzae inoculation location in salt stressed tomato plants", 50))+
+  labs(title = str_wrap("Observed data (points) vs predicted (lines with 95% confidence interval) for photosystem II efficiency across days from germination and M. oryzae inoculation location in salt stressed tomato plants", 50))+
   guides(fill=guide_legend(title="Treatment"),
          color=guide_legend(title="Treatment"))+
   scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
@@ -2378,7 +2378,7 @@ predict_plot(mod23_gsw, d23_li, gsw, rh_s, treatment, 100,
              correction = "exponential")+
   ylab("Stomatal Conductance  (mol m-2 s-1)")+
   xlab("Relative Humidity (%)")+
-  labs(title = str_wrap("Real vs Predicted 95% confidence interval for stomatal conductance across relative humidity and M. oryzae inoculation location in salt stressed tomato", 50))+
+  labs(title = str_wrap("Observed data (points) vs predicted (lines with 95% confidence interval) for stomatal conductance across relative humidity and M. oryzae inoculation location in salt stressed tomato", 50))+
   ylim(0, 2.5)+
   guides(fill=guide_legend(title="Treatment"),
          color=guide_legend(title="Treatment"))+
@@ -2914,7 +2914,7 @@ predict_plot(mod24_gsw, filter(d24_li, gsw>0), gsw, rh_s, treatment,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Relative Humidity (%)")+
   ylim(0,2)+
-  labs(title = str_wrap("Real vs Predicted 95% confidence interval for stomatal conductance across relative humidity and microbial consortium inoculation timing in tomato plants", 50))+
+  labs(title = str_wrap("Observed data (points) vs predicted (lines with 95% confidence interval) for stomatal conductance across relative humidity and microbial consortium inoculation timing in tomato plants", 50))+
   guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
@@ -2938,7 +2938,7 @@ predict_plot(mod24_ps2_2, d24_ps2_joined, phips2, daysfromgermination, treatment
   ylab("Photosystem II Efficiency (PhiPS2)")+
   xlab("Days From Germination")+
   ylim(0.55, 0.8)+
-  labs(title = str_wrap("Real vs Predicted 95% confidence interval for photosystem II efficiency across days from germination and microbial consortium inoculation timing in tomato plants", 50))+
+  labs(title = str_wrap("Observed data (points) vs predicted (lines with 95% confidence interval) for photosystem II efficiency across days from germination and microbial consortium inoculation timing in tomato plants", 50))+
   guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
