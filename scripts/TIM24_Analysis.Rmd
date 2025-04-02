@@ -13,7 +13,6 @@ This trial was conducted in a greenhouse at Kennesaw State University (KSU). Pla
 
 ## 1.1 Load Packages
 ```{r packages, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 require(tidyverse); require(lmerTest); require(showtext); require(MASS); require(scico); require(pwr); require(devtools); require(multcomp); require(rstatix); require(car); require(vegan)
 # custom package
 install_github("zachpeagler/ztils")
@@ -460,8 +459,8 @@ cld(comps)
 
 ``` {r DS_analysis, include = TRUE}
 # RS_length
-multiPDF_Z(DS_data$RS_Length, 100, "all", a_palette, "R:S Length")
-multiCDF_Z(DS_data$RS_Length, 100, "all", a_palette, "R:S Length")
+multiPDF_plot(DS_data$RS_Length, 100, "all", a_palette, "R:S Length")
+multiCDF_plot(DS_data$RS_Length, 100, "all", a_palette, "R:S Length")
 multiKS_cont(DS_data$RS_Length, "all")
 
 
@@ -522,7 +521,8 @@ summary(model_RSM <- (lm(
   logit(RS_Mass) ~ Treatment,
   data = DS_data)))
 
-p1 <- rda(DS_data[,4:7])
+scaled_ds_vars <- data.frame(apply(DS_data[,c(4:7)], 2, scale))
+p1 <- rda(scaled_ds_vars)
 summary(p1)
 biplot(p1)
 
@@ -540,16 +540,25 @@ ggplot()+
   scale_color_manual(values = four_colors)+
   scale_fill_manual(values = four_colors)+
   scale_shape_manual(values = four_shapes)+
-  geom_segment(data = vx, aes(x=0, y=0, xend=PC1*.225, yend=PC2*.225), color = "black")+
-  annotate("text", x=vx[,1]*.25, y=vx[,2]*.25, label = rownames(vx))+
+  geom_segment(data = vx, aes(x=0, y=0, xend=PC1*.45, yend=PC2*.45), color = "black")+
+  annotate("text", x=vx[,1]*.5, y=vx[,2]*.5, label = rownames(vx), size = 8)+
   labs(title=str_wrap("Principal Component Analysis for Tomato Destructive Sampling Metrics", 40))+
   xlab("PC1 (67.76%)")+
   ylab("PC2 (31.41%)")+
   theme_bw()+
   theme(
-    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
-    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
-    title = element_text(size=title_size, family="open", face="bold")
+    text = element_text(size=14, family="mont", lineheight=0.8),
+    axis.title = element_text(size=16, family = "mont", face= "bold"),
+    title = element_text(size=20, family="open", face="bold")
   )
+
+pca_data <- function(data, pcavars){
+  p1 <- rda(pcavars)
+  outdata <- cbind(data, p1$CA$u)
+  return(outdata)
+}
+
+ds_data_pca <- pca_data(DS_data, scaled_ds_vars)
+pcr <- lm(PC1 ~ Treatment, data = ds_data_pca)
 
 ```

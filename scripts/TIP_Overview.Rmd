@@ -555,7 +555,7 @@ d23_fl_summary <- d23_fl %>%
 ### Make summary dataframe with mean and sd of mass by plant.
 d23_fl_means <- d23_fl %>%
   group_by(treatment, plant) %>%
-  summarise_at(vars(mass, logit_sugar, sugar_grams), list(mean=mean, sd=sd))
+  summarise_at(vars(mass, sugar_avg, logit_sugar, sugar_grams), list(mean=mean, sd=sd))
 
 ## Li-600
 d23_li <- read.csv(d23_li_file, stringsAsFactors = T) %>%
@@ -2285,7 +2285,7 @@ mod23_ber_letters <- cld(comps)$mcletters$Letters
 print(mod23_ber_letters)
 
 ## sugar
-mod23_sug <- lm(log(sugar_grams_mean) ~ treatment, data = d23_fl_means)
+mod23_sug <- lm(logit(sugar_avg_mean)~ treatment, data = d23_fl_means)
 AIC(mod23_sug)
 summary(mod23_sug)
 comps <- glht(mod23_sug, linfct = mcp(treatment = "Tukey"))
@@ -2293,17 +2293,17 @@ mod23_sug_letters <- cld(comps)$mcletters$Letters
 print(mod23_sug_letters)
 
 ## box plot of total sugar by Treatment
-ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean, 
+ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_avg_mean, 
                          fill=treatment, color=treatment)) +
   geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
   geom_jitter( width=.15, height=0)+
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Mean Sugar Mass by Inoculation Treatment in Tomato"
+    title="Mean Sugar Content by Inoculation Treatment in Tomato"
   ) +
-    annotate("text", x=1:4, y=9.5, label = mod23_sug_letters, size=10, family="open")+
-  ylab("Sugar (g)")+
+    annotate("text", x=1:4, y=10, label = mod23_sug_letters, size=10, family="open")+
+  ylab("Sugar (%)")+
   xlab("Treatment")+
   theme_bw()+
   theme(
