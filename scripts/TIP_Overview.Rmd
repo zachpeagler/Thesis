@@ -50,11 +50,11 @@ require(ztils)
 
 a_palette <- "oslo"
 # super lazy way to make palettes
-two_colors = scico(2, begin = 0.9, end=0.1, palette=a_palette)
-four_colors = scico(4, begin = 0.9, end=0.1, palette=a_palette)
-five_colors = scico(5, begin = 0.9, end=0.1, palette=a_palette)
-ten_col = scico(10, begin = 0.9, end=0.1, palette=a_palette)
-twelve_col = scico(12, begin = 0.9, end=0.1, palette=a_palette)
+two_colors = scico(2, begin = 0.8, end=0.3, palette=a_palette)
+four_colors = scico(4, begin = 0.8, end=0.3, palette=a_palette)
+five_colors = scico(5, begin = 0.8, end=0.3, palette=a_palette)
+ten_col = scico(10, begin = 0.8, end=0.3, palette=a_palette)
+twelve_col = scico(12, begin = 0.3, end=0.3, palette=a_palette)
 # add fonts
 font_add_google("Open Sans", family = "open")
 font_add_google("Montserrat", family = "mont")
@@ -499,10 +499,20 @@ d23_fg_summary <- d23_fg %>%
                list(sum=sum)) %>%
   mutate(pber = round(ber_sum/fruit_sum, 4))
 
+d23_fg_summary2 <- d23_fg %>%
+  group_by(treatment) %>%
+  summarise_at(vars(fruit, ber, mass),
+               list(sum=sum)) %>%
+  mutate(pber = round(ber_sum/fruit_sum, 4))
+
 ### Means Fruit Greenhouse
 ### Make summary dataframe with mean and sd of mass by plant.
 d23_fg_means <- d23_fg %>%
   group_by(treatment, plant) %>%
+  summarise_at(vars(mass), list(mean=mean, sd=sd))
+
+d23_fg_means2 <- d23_fg %>%
+  group_by(treatment) %>%
   summarise_at(vars(mass), list(mean=mean, sd=sd))
 
 
@@ -551,10 +561,19 @@ d23_fl_summary <- d23_fl %>%
   group_by(treatment, plant) %>%
   summarise_at(vars(fruit, sugar_grams, mass),
                list(sum=sum))
+
+d23_fl_summary2 <- d23_fl %>%
+  group_by(treatment) %>%
+  summarise_at(vars(fruit, sugar_grams, mass),
+               list(sum=sum))
 ### Means Fruit Lab
 ### Make summary dataframe with mean and sd of mass by plant.
 d23_fl_means <- d23_fl %>%
   group_by(treatment, plant) %>%
+  summarise_at(vars(mass, sugar_avg, logit_sugar, sugar_grams), list(mean=mean, sd=sd))
+
+d23_fl_means2 <- d23_fl %>%
+  group_by(treatment) %>%
   summarise_at(vars(mass, sugar_avg, logit_sugar, sugar_grams), list(mean=mean, sd=sd))
 
 ## Li-600
@@ -753,9 +772,21 @@ d24_f_means <- na.omit(d24_f) %>%
   group_by(treatment, plant) %>%
   summarise_at(vars(mass, sugar_avg, sugar_grams), list(mean=mean, sd=sd))
 
+d24_f_means2 <- na.omit(d24_f) %>%
+  group_by(treatment) %>%
+  summarise_at(vars(mass, sugar_avg, sugar_grams), list(mean=mean, sd=sd))
+
 ### Sum the fruit, BER, sugar, and mass by treatment group, then get ber probability.
 d24_f_summary <- d24_f %>%
   group_by(treatment, germination, transplantation, plant) %>%
+  summarise_at(vars(fruit, ber, fungus, cracking, mass), list(sum=sum)) %>%
+  mutate(pber = round(ber_sum/fruit_sum, 4),
+         pfungus = round(fungus_sum/fruit_sum, 4),
+         pcracking = round(cracking_sum/fruit_sum, 4)
+         )
+
+d24_f_summary2 <- d24_f %>%
+  group_by(treatment) %>%
   summarise_at(vars(fruit, ber, fungus, cracking, mass), list(sum=sum)) %>%
   mutate(pber = round(ber_sum/fruit_sum, 4),
          pfungus = round(fungus_sum/fruit_sum, 4),
@@ -900,12 +931,12 @@ pwr21 <- round(pwr.anova.test(k=4, n=7, f=0.25, sig.level=0.5)$power, 4)
 # fruit
 ## mass
 ### PDF, CDF, and KS test
-multiPDF_plot(d21_f$mass, 100, "all", a_palette)
+multipdf_plot(d21_f$mass, 100, "all", a_palette)
 ggsave("21mass_PDF.svg", path = "C:/Github/Thesis/figures/TIP21")
-multiCDF_plot(d21_f$mass, 100, "all", a_palette)
+multicdf_plot(d21_f$mass, 100, "all", a_palette)
 ggsave("21mass_CDF.svg", path = "C:/Github/Thesis/figures/TIP21")
 
-multiKS_cont(d21_f$mass, "all")
+multiks_cont(d21_f$mass, "all")
 
 ## check for heteroscedasticity
 ### in mass as a function of treatment
@@ -1048,13 +1079,13 @@ ggsave("21totalfruitcount.svg", path = "C:/Github/Thesis/figures/TIP21")
 # multispeq
 ## phiPS2
 ### PDF, CDF, and KS test
-multiPDF_plot(d21_m$phi2, 100, "all", a_palette, "PhiPS2")+
+multipdf_plot(d21_m$phi2, 100, "all", a_palette, "PhiPS2")+
   labs(tag="2021")
 ggsave("21phi2_PDF.svg", path = "C:/Github/Thesis/figures/TIP21")
-multiCDF_plot(d21_m$phi2, 100, "all", a_palette, "PhiPS2")+
+multicdf_plot(d21_m$phi2, 100, "all", a_palette, "PhiPS2")+
   labs(tag="2021")
 ggsave("21phi2_CDF.svg", path = "C:/Github/Thesis/figures/TIP21")
-multiKS_cont(d21_m$phi2, "all")
+multiks_cont(d21_m$phi2, "all")
 
 ### check for heteroscedasticity
 ###### Pr(>F) of < 0.05 means that the value is homoscedastic
@@ -1255,13 +1286,13 @@ ggsave("21_phi2_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP21",
 # fruit
 ## mass
 ### PDF, CDF, and KS test
-multiPDF_plot(d22_f_omitmassna$mass, 100, "all", a_palette, "mass")+
+multipdf_plot(d22_f_omitmassna$mass, 100, "all", a_palette, "mass")+
   labs(tag="2022")
 ggsave("22mass_PDF.svg", path = "C:/Github/Thesis/figures/TIP22")
-multiCDF_plot(d22_f_omitmassna$mass, 100, "all", a_palette, "mass")+
+multicdf_plot(d22_f_omitmassna$mass, 100, "all", a_palette, "mass")+
   labs(tag="2022")
 ggsave("22mass_CDF.svg", path = "C:/Github/Thesis/figures/TIP22")
-multiKS_cont(d22_f_omitmassna$mass, "all")
+multiks_cont(d22_f_omitmassna$mass, "all")
 
 ## check for heteroscedasticity
 ### in mass as a function of treatment
@@ -1465,13 +1496,13 @@ ggsave("22fruit_count.svg", path = "C:/Github/Thesis/figures/TIP22")
 
 ## sugar
 ### PDF, CDF, and KS test
-multiPDF_plot(d22_f_omitna$sugar_grams, 100, "all", a_palette, "sugar")+
+multipdf_plot(d22_f_omitna$sugar_grams, 100, "all", a_palette, "sugar")+
   labs(tag="2022")
 ggsave("22sugar_PDF.svg", path = "C:/Github/Thesis/figures/TIP22")
-multiCDF_plot(d22_f_omitna$sugar_grams, 100, "all", a_palette, "sugar")+
+multicdf_plot(d22_f_omitna$sugar_grams, 100, "all", a_palette, "sugar")+
   labs(tag="2022")
 ggsave("22sugar_CDF.svg", path = "C:/Github/Thesis/figures/TIP22")
-multiKS_cont(d22_f_omitna$sugar_grams, "all")
+multiks_cont(d22_f_omitna$sugar_grams, "all")
 
 ## check for heteroscedasticity
 ### in mass as a function of treatment
@@ -1730,11 +1761,13 @@ summary(mod22_mps2)
 # fruit greenhouse
 ## mass
 ### PDF, CDF, and KS test
-multiPDF_plot(d23_fg$mass, 100, "all", a_palette, "mass")
+multipdf_plot(d23_fg$mass, 100, "all", a_palette, "mass")
 ggsave("23_mass_PDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiCDF_plot(d23_fg$mass, 100, "all", a_palette, "mass")
+ggsave("23_mass_PDF.png", path = "C:/Github/Thesis/figures/TIP23")
+multicdf_plot(d23_fg$mass, 100, "all", a_palette, "mass")
 ggsave("23_mass_CDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiKS_cont(d23_fg$mass, "all")
+ggsave("23_mass_CDF.png", path = "C:/Github/Thesis/figures/TIP23")
+multiks_cont(d23_fg$mass, "all")
 
 ## check for heteroscedasticity
 ### in mass as a function of treatment
@@ -1750,7 +1783,8 @@ ggplot(data = d23_fg, aes(x= treatment, y = mass,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Fruit Mass by Inoculation Treatments in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -1772,7 +1806,8 @@ ggplot(data = d23_fg, aes(x= treatment, y = mass,
          color=guide_legend(title=str_wrap("Blossom-End Rot", 10))
          )+
   labs(
-    title="Fruit Mass by Blossom-End Rot and Inoculation Treatments in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -1786,7 +1821,7 @@ ggplot(data = d23_fg, aes(x= treatment, y = mass,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_mass_by_ber.svg", path = "C:/Github/Thesis/figures/TIP23")
-
+ggsave("23_mass_by_ber.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ## summarized fruit graphs
 ### box plot of mean mass of ALL tomatoes by treatment
@@ -1797,7 +1832,8 @@ ggplot(data = d23_fg_means, aes(x= treatment, y = mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Mean Fruit Mass by Inoculation Treatments in Tomato Plants"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -1817,7 +1853,8 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title= str_wrap("Mean Fruit Mass In Fruit Analyzed for Sugar by Inoculation Treatments in Tomato Plants", 60)
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -1829,8 +1866,7 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_mass_mean.svg", path = "C:/Github/Thesis/figures/TIP23")
-
-
+ggsave("23_mass_mean.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ### box plot of mean sugar by treatment
 ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean, 
@@ -1840,7 +1876,8 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title= str_wrap("Mean Sugar Mass In Fruit by Inoculation Treatment in Tomato", 60)
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -1852,7 +1889,7 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_sugar_mean.svg", path = "C:/Github/Thesis/figures/TIP23")
-
+ggsave("23_sugar_mean.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ### box plot of percent BER by treatment
 ggplot(data = d23_fg_summary, aes(x= treatment, y = pber, 
@@ -1862,7 +1899,8 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = pber,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Proportion BER by Inoculation Treatment in Tomato Plants"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("pBER")+
   xlab("Treatment")+
@@ -1874,6 +1912,7 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = pber,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_ber.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_ber.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ### box plot of total fruit mass by treatment
 ggplot(data = d23_fg_summary, aes(x= treatment, y = mass_sum, 
@@ -1883,7 +1922,8 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = mass_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Total Fruit Mass by Inoculation Treatment in Tomato Plants"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -1903,7 +1943,8 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = fruit_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Total Fruit Count by Inoculation Treatment in Tomato Plants"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Fruit")+
   xlab("Treatment")+
@@ -1915,15 +1956,17 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = fruit_sum,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_fruit_count.svg", path = "C:/Github/Thesis/figures/TIP23")
-
+ggsave("23_fruit_count.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ## sugar
 ### PDF, CDF, and KS test
-multiPDF_plot(d23_fl$sugar_grams, 100, "all", a_palette, "sugar")
+multipdf_plot(d23_fl$sugar_grams, 100, "all", a_palette, "sugar")
 ggsave("23_sugar_PDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiCDF_plot(d23_fl$sugar_grams, 100, "all", a_palette, "sugar")
+ggsave("23_sugar_PDF.png", path = "C:/Github/Thesis/figures/TIP23")
+multicdf_plot(d23_fl$sugar_grams, 100, "all", a_palette, "sugar")
 ggsave("23_sugar_CDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiKS_cont(d23_fl$sugar_grams, "all")
+ggsave("23_sugar_CDF.png", path = "C:/Github/Thesis/figures/TIP23")
+multiks_cont(d23_fl$sugar_grams, "all")
 
 ## check for heteroscedasticity
 ### in sugar as a function of treatment
@@ -1938,7 +1981,8 @@ ggplot(data = d23_fl, aes(x= treatment, y = sugar_avg,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Sugar % by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar %")+
   xlab("Treatment")+
@@ -1958,7 +2002,8 @@ ggplot(data = d23_fl, aes(x= treatment, y = sugar_grams,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Sugar Mass by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar (g)")+
   xlab("Treatment")+
@@ -1977,7 +2022,8 @@ ggplot(data = d23_fl, aes(x= mass, y = sugar_avg,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Sugar by Mass in Inoculated Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar %")+
   xlab("Mass (g)")+
@@ -1989,6 +2035,7 @@ ggplot(data = d23_fl, aes(x= mass, y = sugar_avg,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_sugar_by_mass.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_sugar_by_mass.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ## box plot of mean sugar by Treatment
 ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean, 
@@ -1998,7 +2045,8 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Mean Sugar % by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar %")+
   xlab("Treatment")+
@@ -2010,6 +2058,7 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_grams_mean,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_sugar_grams_mean.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_sugar_grams_mean.png", path = "C:/Github/Thesis/figures/TIP23")
 
 
 ## box plot of total sugar by Treatment
@@ -2020,7 +2069,8 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = sugar_grams_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Total Sugar Mass by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar (g)")+
   xlab("Treatment")+
@@ -2034,11 +2084,13 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = sugar_grams_sum,
 # li-600
 
 # PDF, CDF, and KS test
-multiPDF_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")
+multipdf_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")
 ggsave("23_gsw_PDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiCDF_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")
+ggsave("23_gsw_PDF.png", path = "C:/Github/Thesis/figures/TIP23")
+multicdf_plot(filter(d23_li, gsw >0)$gsw, 100, "all", a_palette, "gsw")
 ggsave("23_gsw_CDF.svg", path = "C:/Github/Thesis/figures/TIP23")
-multiKS_cont(filter(d23_li, gsw >0)$gsw, "all")
+ggsave("23_gsw_CDF.png", path = "C:/Github/Thesis/figures/TIP23")
+multiks_cont(filter(d23_li, gsw >0)$gsw, "all")
 
 # check for heteroscedasticity
 ## in gsw as a function of treatment
@@ -2053,7 +2105,8 @@ ggplot(data = d23_li, aes(x= treatment, y = gsw, fill=treatment, color=treatment
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title=str_wrap("Stomatal Conductance Across Inoculation Treatments in Tomato", 40)
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Stomatal Conductance (mol m-2 s-1)")+
 #  annotate("text", x=1:4, y=3, label = c("a", "b", "b", "b"), size=5, family="open")+
@@ -2075,8 +2128,9 @@ ggplot(data = d23_li, aes(x=daysfromgermination, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Days From Germination")+
   labs(
-    title=str_wrap("Stomatal Conductance By Days From Germination Across Relative Humidity in Tomato", 50)
-  )+
+    title=NULL,
+    subtitle = NULL
+  ) +
     guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 10)))+
   theme(
     text = element_text(size=16, family="mont"),
@@ -2091,6 +2145,7 @@ ggplot(data = d23_li, aes(x=daysfromgermination, y = gsw,
     title = element_text(size=20, family="open", face="bold", lineheight = .8)
   )
 ggsave("23_gsw_by_date.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_gsw_by_date.png", path = "C:/Github/Thesis/figures/TIP23")
 
 # GSW by time across relative humidity
 ggplot(data = d23_li, aes(x=time, y = gsw, 
@@ -2104,8 +2159,9 @@ ggplot(data = d23_li, aes(x=time, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Time")+
   labs(
-    title=str_wrap("Stomatal Conductance By Time Across Date in Tomato", 50)
-  )+
+    title=NULL,
+    subtitle = NULL
+  ) +
     guides(color=guide_legend(title="Date"))+
   theme(
     text = element_text(size=16, family="mont"),
@@ -2120,6 +2176,7 @@ ggplot(data = d23_li, aes(x=time, y = gsw,
     title = element_text(size=20, family="open", face="bold", lineheight = .5)
   )
 ggsave("23_gsw_by_time.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_gsw_by_time.png", path = "C:/Github/Thesis/figures/TIP23")
 
 # gsw by relative humidity across treatment groups
 ggplot(data = d23_li, aes(x=rh_s, y = gsw, 
@@ -2133,9 +2190,9 @@ ggplot(data = d23_li, aes(x=rh_s, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Relative Humidity")+
   labs(
-    title=str_wrap("Stomatal Conductance By Relative
-                   Humidity Across Inoculation Treatment in Tomato", 50)
-  )+
+    title=NULL,
+    subtitle = NULL
+  ) +
   theme(
     text = element_text(size=16, family="mont"),
     legend.title = element_text(size=16, family="mont", face="bold"),
@@ -2158,8 +2215,9 @@ ggplot(data = d23_li, aes(x=minutesfromstart, y = gsw, color = rh_s)) +
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Minutes From Start")+
   labs(
-    title=str_wrap("Stomatal Conductance by Minutes From Start Across Relative Humidity in Tomato", 40)
-  )+
+    title=NULL,
+    subtitle = NULL
+  ) +
       guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 8)))+
   theme(
     text = element_text(size=16, family="mont"),
@@ -2185,7 +2243,8 @@ ggplot(data = d23_m, aes(x= treatment, y = logitps2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Logit PhiPS2 by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("PhiPS2")+
   xlab("Treatment")+
@@ -2206,7 +2265,8 @@ ggplot(data = d23_m, aes(x= date, y = logitps2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Logit PhiPS2 by Date and Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("PhiPS2")+
   xlab("Date")+
@@ -2218,7 +2278,7 @@ ggplot(data = d23_m, aes(x= date, y = logitps2,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_phi2_by_date.svg", path = "C:/Github/Thesis/figures/TIP23")
-
+ggsave("23_phi2_by_date.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ### logit PhiPS2 by time scatterplot
 ggplot(data = d23_m, aes(x= time, y = logitps2, 
@@ -2229,7 +2289,8 @@ ggplot(data = d23_m, aes(x= time, y = logitps2,
   scale_color_manual(values=four_colors)+
   scale_x_discrete(guide=guide_axis(check.overlap=TRUE))+
   labs(
-    title="Logit PhiPS2 by Time and Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("PhiPS2")+
   xlab("Time")+
@@ -2241,6 +2302,7 @@ ggplot(data = d23_m, aes(x= time, y = logitps2,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("23_phi2_by_time.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_phi2_by_time.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ```
 
@@ -2262,7 +2324,8 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title= str_wrap("Mean Fruit Mass by Inoculation Treatment in Tomato Plants", 60)
+    title=NULL,
+    subtitle = NULL
   ) +
   annotate("text", x=1:4, y=140, label = mod23_mass_letters, size=10, family="open")+
   ylab("Mass (g)")+
@@ -2274,8 +2337,8 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
-ggsave("23_mass_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
-       width = 10, height = 8)
+ggsave("23_mass_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_mass_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
 ## ber
 mod23_ber <- lm(logit(pber) ~ treatment, data = d23_fg_summary)
 AIC(mod23_ber)
@@ -2300,7 +2363,8 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_avg_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Mean Sugar Content by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
     annotate("text", x=1:4, y=10, label = mod23_sug_letters, size=10, family="open")+
   ylab("Sugar (%)")+
@@ -2312,29 +2376,29 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_avg_mean,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
-ggsave("23_sug_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
-       width = 10, height = 8)
-
+ggsave("23_sug_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_sug_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
 ## fruit count
-mod23_fc <- glm(fruit_sum ~ treatment, data = d23_fl_summary,
-                family = poisson(link = "log"))
+mod23_fc <- glm(fruit_sum ~ treatment, data = d23_fg_summary,
+                family = poisson(link = "identity"))
 AIC(mod23_fc)
 summary(mod23_fc)
-glm_pseudoR2(mod23_fc)
+glm_pseudor2(mod23_fc)
 comps <- glht(mod23_fc, linfct = mcp(treatment = "Tukey"))
 mod23_fc_letters <- cld(comps)$mcletters$Letters
 print(mod23_fc_letters)
 
-ggplot(data = d23_fl_summary, aes(x= treatment, y = fruit_sum, 
+ggplot(data = d23_fg_summary, aes(x= treatment, y = fruit_sum, 
                          fill=treatment, color=treatment)) +
   geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
   geom_jitter( width=.15, height=0)+
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Total Fruit Count by Inoculation Treatment in Tomato Plants"
+    title=NULL,
+    subtitle = NULL
   ) +
-  annotate("text", x=1:4, y=35, label = mod23_fc_letters, size=10, family="open")+
+  annotate("text", x=1:4, y=100, label = mod23_fc_letters, size=10, family="open")+
   ylab("Fruit")+
   xlab("Treatment")+
   theme_bw()+
@@ -2344,9 +2408,80 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = fruit_sum,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
+
+ggsave("23_fc_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_fc_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
+
+
+## marketable fruit count
+mod23_fc2 <- glm(fruit_sum ~ treatment, data = d23_fl_summary,
+                family = poisson(link = "identity"))
+AIC(mod23_fc2)
+summary(mod23_fc2)
+glm_pseudor2(mod23_fc2)
+comps <- glht(mod23_fc2, linfct = mcp(treatment = "Tukey"))
+mod23_fc2_letters <- cld(comps)$mcletters$Letters
+print(mod23_fc2_letters)
+
+
+ggplot(data = d23_fl_summary, aes(x= treatment, y = fruit_sum, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=35, label = mod23_fc2_letters, size=10, family="open")+
+  ylab("Fruit")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+ggsave("23_mfc_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_mfc_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
+
+## total fruit mass
+mod23_msum <- lm(mass_sum ~ treatment, data = d23_fg_summary)
+AIC(mod23_msum)
+summary(mod23_msum)
+comps <- glht(mod23_msum, linfct = mcp(treatment = "Tukey"))
+mod23_msum_letters <- cld(comps)$mcletters$Letters
+print(mod23_msum_letters)
+
+
 # fluorescence
+d23_ps2_pcadat <- pca_data(d23_ps2_joined, d23_ps2_joined[,c(9:13)])
+## phi2 pca
+mod23_phi2_3 <- lmer(logit(phips2) ~ treatment + PC1 + (1 | Device), data = d23_ps2_pcadat)
+AIC(mod23_phi2_3)
+summary(mod23_phi2_3)
+r.squaredGLMM(mod23_phi2_3)
+comps <- glht(mod23_phi2_3, linfct = mcp(treatment = "Tukey"))
+mod23_phi2_3_letters <- cld(comps)$mcletters$Letters
+print(mod23_phi2_3_letters)
+mod23_phi2_3r <- lm(logit(phips2) ~ treatment + PC1, data = d23_ps2_pcadat)
+predict_plot(mod23_phi2_3r, d23_ps2_pcadat, phips2, PC1, treatment, 100,
+             correction = "logit")+
+  ylim(0.5,0.8)+
+  ylab("PhiPS2")+
+  xlab("PC1")+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  guides(fill=guide_legend(title="Treatment"),
+         color=guide_legend(title="Treatment"))
+
 ## phi2
-mod23_phi2 <- lmer(logit(phips2) ~ treatment + AmbientLight + (1 | Device), data = d23_ps2_joined)
+mod23_phi2 <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | Device), data = d23_ps2_joined)
 AIC(mod23_phi2)
 summary(mod23_phi2)
 r.squaredGLMM(mod23_phi2)
@@ -2360,12 +2495,15 @@ predict_plot(mod23_phi2_2, d23_ps2_joined, phips2, daysfromgermination, treatmen
   ylim(0.5,0.8)+
   ylab("PhiPS2")+
   xlab("Days From Germination")+
-  labs(title = str_wrap("Observed data (points) vs predicted (lines with 95% confidence interval) for photosystem II efficiency across days from germination and M. oryzae inoculation location in salt stressed tomato plants", 50))+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
   guides(fill=guide_legend(title="Treatment"),
-         color=guide_legend(title="Treatment"))+
-  scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
-  scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
+         color=guide_legend(title="Treatment"))
 ggsave("23_phi2_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP23",
+       width = 10, height = 6)
+ggsave("23_phi2_pred_CI.png", path = "C:/Github/Thesis/figures/TIP23",
        width = 10, height = 6)
 ## gsw
 mod23_gsw <- lm(log(gsw) ~ treatment + rh_s, data = d23_li)
@@ -2378,7 +2516,10 @@ predict_plot(mod23_gsw, d23_li, gsw, rh_s, treatment, 100,
              correction = "exponential")+
   ylab("Stomatal Conductance  (mol m-2 s-1)")+
   xlab("Relative Humidity (%)")+
-  labs(title = str_wrap("Observed data (points) vs predicted (lines with 95% confidence interval) for stomatal conductance across relative humidity and M. oryzae inoculation location in salt stressed tomato", 50))+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
   ylim(0, 2.5)+
   guides(fill=guide_legend(title="Treatment"),
          color=guide_legend(title="Treatment"))+
@@ -2386,6 +2527,48 @@ predict_plot(mod23_gsw, d23_li, gsw, rh_s, treatment, 100,
   scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
 ggsave("23_gsw_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP23",
        width = 10, height = 6)
+ggsave("23_gsw_pred_CI.png", path = "C:/Github/Thesis/figures/TIP23",
+       width = 10, height = 6)
+
+# stomatal density
+d23_st <- d23_st %>%
+  mutate(treatment = as.factor(treatment))
+d23_st_lower <- d23_st %>% filter(surface == "Lower")
+d23_st_sum <- d23_st_lower %>%
+  group_by(treatment, plant) %>%
+  summarise_at(vars(stomatal_density), list(mean)) %>%
+  ungroup()
+
+mod23_st <- lm(log(stomatal_density) ~ treatment, data = d23_st_sum)
+AIC(mod23_st)
+summary(mod23_st)
+comps <- glht(mod23_st, linfct = mcp(treatment = "Tukey"))
+mod23_st_letters <- cld(comps)$mcletters$Letters
+print(mod23_st_letters)
+
+ggplot(data = d23_st_sum, aes(x= treatment, y = stomatal_density, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=35, label = mod23_st_letters, size=10, family="open")+
+  ylab(str_wrap("Stomatal Density (stomates/cm^2",20))+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+ggsave("23_st_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_st_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
 
 ```
 
@@ -2395,11 +2578,14 @@ ggsave("23_gsw_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP23",
 ```{r 24exploratory}
 ## mass
 ### PDF, CDF, and KS test
-multiPDF_plot(d24_f$mass, 100, "all", a_palette, "mass")
+multipdf_plot(d24_f$mass, 100, "all", a_palette, "mass")
 ggsave("24_mass_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
-multiCDF_plot(d24_f$mass, 100, "all", a_palette, "mass")
+ggsave("24_mass_PDF.png", path = "C:/Github/Thesis/figures/TIP24")
+
+multicdf_plot(d24_f$mass, 100, "all", a_palette, "mass")
 ggsave("24_mass_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
-multiKS_cont(d24_f$mass, "all")
+ggsave("24_mass_CDF.png", path = "C:/Github/Thesis/figures/TIP24")
+multiks_cont(d24_f$mass, "all")
 
 ## check for heteroscedasticity
 ### in mass as a function of treatment
@@ -2413,7 +2599,8 @@ ggplot(data = d24_f, aes(x= treatment, y = mass,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Fruit Mass by Inoculation Treatments in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -2435,7 +2622,8 @@ ggplot(data = d24_f, aes(x= treatment, y = mass,
          color=guide_legend(title=str_wrap("Blossom-End Rot", 10))
          )+
   labs(
-    title="Fruit Mass by Blossom-End Rot and Inoculation Treatments in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -2449,6 +2637,7 @@ ggplot(data = d24_f, aes(x= treatment, y = mass,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("24_mass_by_ber.svg", path = "C:/Github/Thesis/figures/TIP24")
+ggsave("24_mass_by_ber.png", path = "C:/Github/Thesis/figures/TIP24")
 
 ## summarized fruit graphs
 ### box plot of mean mass by treatment
@@ -2459,7 +2648,8 @@ ggplot(data = d24_f_means, aes(x= treatment, y = mass_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title= str_wrap("Mean Fruit Mass In Fruit Analyzed for Sugar by Inoculation Treatments in Tomato Plants", 60)
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -2471,6 +2661,7 @@ ggplot(data = d24_f_means, aes(x= treatment, y = mass_mean,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("24_mass_mean_box.svg", path = "C:/Github/Thesis/figures/TIP24")
+ggsave("24_mass_mean_box.png", path = "C:/Github/Thesis/figures/TIP24")
 
 
 ### box plot of mean sugar by treatment
@@ -2481,7 +2672,8 @@ ggplot(data = d24_f_means, aes(x= treatment, y = sugar_avg_mean,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title= str_wrap("Mean Sugar Content In Fruit by Inoculation Treatment in Tomato", 60)
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar (%)")+
   xlab("Treatment")+
@@ -2493,6 +2685,7 @@ ggplot(data = d24_f_means, aes(x= treatment, y = sugar_avg_mean,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("24_sugar_mean_box.svg", path = "C:/Github/Thesis/figures/TIP24")
+ggsave("24_sugar_mean_box.png", path = "C:/Github/Thesis/figures/TIP24")
 
 
 ### box plot of percent BER by treatment
@@ -2503,7 +2696,8 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = pber,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Proportion BER by Inoculation Treatment in Tomato Plants"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("pBER")+
   xlab("Treatment")+
@@ -2515,6 +2709,7 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = pber,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("24_ber_box.svg", path = "C:/Github/Thesis/figures/TIP24")
+ggsave("24_ber_box.png", path = "C:/Github/Thesis/figures/TIP24")
 
 
 ### box plot of total fruit mass by treatment
@@ -2525,7 +2720,8 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = mass_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Total Fruit Mass by Inoculation Treatment in Tomato Plants"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Mass (g)")+
   xlab("Treatment")+
@@ -2545,7 +2741,8 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = fruit_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Total Fruit Count by Inoculation Treatment in Tomato Plants"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Fruit")+
   xlab("Treatment")+
@@ -2557,15 +2754,19 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = fruit_sum,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("24_fruit_count.svg", path = "C:/Github/Thesis/figures/TIP24")
+ggsave("24_fruit_count.png", path = "C:/Github/Thesis/figures/TIP24")
 
 ## sugar
 ### PDF, CDF, and KS test
-multiPDF_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")
+multipdf_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")
 ggsave("24_sug_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
-multiCDF_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")
-ggsave("24_sug_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
+ggsave("24_sug_PDF.png", path = "C:/Github/Thesis/figures/TIP24")
 
-multiKS_cont(filter(d24_f, sugar_grams >0)$sugar_grams, "all")
+multicdf_plot(filter(d24_f, sugar_grams >0)$sugar_grams, 100, "all", a_palette, "sugar (g)")
+ggsave("24_sug_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
+ggsave("24_sug_CDF.png", path = "C:/Github/Thesis/figures/TIP24")
+
+multiks_cont(filter(d24_f, sugar_grams >0)$sugar_grams, "all")
 
 ## check for heteroscedasticity
 ### in sugar as a function of treatment
@@ -2580,7 +2781,8 @@ ggplot(data = d24_f, aes(x= treatment, y = sugar_avg,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Sugar % by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar %")+
   xlab("Treatment")+
@@ -2600,7 +2802,8 @@ ggplot(data = d24_f, aes(x= treatment, y = sugar_grams,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Sugar Mass by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar (g)")+
   xlab("Treatment")+
@@ -2619,7 +2822,8 @@ ggplot(data = d24_f, aes(x= mass, y = sugar_avg,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Sugar by Mass in Inoculated Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar %")+
   xlab("Mass (g)")+
@@ -2631,6 +2835,7 @@ ggplot(data = d24_f, aes(x= mass, y = sugar_avg,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("24_sug_by_mass.svg", path = "C:/Github/Thesis/figures/TIP24")
+ggsave("24_sug_by_mass.png", path = "C:/Github/Thesis/figures/TIP24")
 
 ## box plot of total sugar by Treatment
 ggplot(data = d24_f_summary_sugar, aes(x= treatment, y = sugar_grams_sum, 
@@ -2640,7 +2845,8 @@ ggplot(data = d24_f_summary_sugar, aes(x= treatment, y = sugar_grams_sum,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Total Sugar Mass by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Sugar (g)")+
   xlab("Treatment")+
@@ -2654,11 +2860,14 @@ ggplot(data = d24_f_summary_sugar, aes(x= treatment, y = sugar_grams_sum,
 # li-600
 
 # PDF, CDF, and KS test
-multiPDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)
+multipdf_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)
 ggsave("24_gsw_PDF.svg", path = "C:/Github/Thesis/figures/TIP24")
-multiCDF_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)
+ggsave("24_gsw_PDF.png", path = "C:/Github/Thesis/figures/TIP24")
+
+multicdf_plot(filter(d24_li, gsw >0)$gsw, 100, "all", a_palette)
 ggsave("24_gsw_CDF.svg", path = "C:/Github/Thesis/figures/TIP24")
-multiKS_cont(filter(d24_li, gsw >0)$gsw, "all")
+ggsave("24_gsw_CDF.png", path = "C:/Github/Thesis/figures/TIP24")
+multiks_cont(filter(d24_li, gsw >0)$gsw, "all")
 
 # check for heteroscedasticity
 ## in gsw as a function of treatment
@@ -2673,7 +2882,8 @@ ggplot(data = d24_li, aes(x= treatment, y = gsw, fill=treatment, color=treatment
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title=str_wrap("Stomatal Conductance Across Inoculation Treatments in Tomato", 40)
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Stomatal Conductance (mol m-2 s-1)")+
 #  annotate("text", x=1:4, y=3, label = c("a", "b", "b", "b"), size=5, family="open")+
@@ -2695,8 +2905,9 @@ ggplot(data = d24_li, aes(x=daysfromgermination, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Days From Germination")+
   labs(
-    title=str_wrap("Stomatal Conductance By Days From Germination Across Relative Humidity in Tomato", 50)
-  )+
+    title=NULL,
+    subtitle = NULL
+  ) +
     guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 10)))+
   theme(
     text = element_text(size=16, family="mont"),
@@ -2723,8 +2934,9 @@ ggplot(data = d24_li, aes(x=time, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Time")+
   labs(
-    title=str_wrap("Stomatal Conductance By Time Across Date in Tomato", 50)
-  )+
+    title=NULL,
+    subtitle = NULL
+  ) +
     guides(color=guide_legend(title="Date"))+
   theme(
     text = element_text(size=16, family="mont"),
@@ -2751,9 +2963,9 @@ ggplot(data = d24_li, aes(x=rh_s, y = gsw,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Relative Humidity")+
   labs(
-    title=str_wrap("Stomatal Conductance By Relative
-                   Humidity Across Inoculation Treatment in Tomato", 50)
-  )+
+    title=NULL,
+    subtitle = NULL
+  ) +
   theme(
     text = element_text(size=16, family="mont"),
     legend.title = element_text(size=16, family="mont", face="bold"),
@@ -2776,8 +2988,9 @@ ggplot(data = d24_li, aes(x=minutesfromstart, y = gsw, color = rh_s)) +
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Minutes From Start")+
   labs(
-    title=str_wrap("Stomatal Conductance by Minutes From Start Across Relative Humidity in Tomato", 40)
-  )+
+    title=NULL,
+    subtitle = NULL
+  ) +
       guides(color=guide_colorbar(title=str_wrap("Relative Humidity", 8)))+
   theme(
     text = element_text(size=16, family="mont"),
@@ -2803,7 +3016,8 @@ ggplot(data = d24_m, aes(x= treatment, y = logitps2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Logit PhiPS2 by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("PhiPS2")+
   xlab("Treatment")+
@@ -2824,7 +3038,8 @@ ggplot(data = d24_m, aes(x= date, y = logitps2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="Logit PhiPS2 by Date and Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("PhiPS2")+
   xlab("Date")+
@@ -2846,7 +3061,8 @@ ggplot(data = d24_ps2_joined, aes(x= time, y = logitps2,
   scale_color_manual(values=four_colors)+
   scale_x_discrete(guide=guide_axis(check.overlap=TRUE))+
   labs(
-    title="Logit PhiPS2 by Time and Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("PhiPS2")+
   xlab("Time")+
@@ -2880,26 +3096,6 @@ summary(mod24_sug_bp)
 comps <- glht(mod24_sug_bp, linfct=mcp(treatment="Tukey"))
 cld(comps)
 
-mod24_sug <- lm(log(sugar_avg)~treatment + daysfromgermination,
-                      data=na.omit(d24_f))
-summary(mod24_sug)
-AIC(mod24_sug)
-confint(mod24_sug)
-comps <- glht(mod24_sug, linfct=mcp(treatment="Tukey"))
-cld(comps)
-
-predict_plot(mod24_sug, na.omit(d24_f), sugar_avg, daysfromgermination, treatment,
-             100, correction = "exponential")+
-  ylab("Sugar (%)")+
-  xlab("Days From Germination")+
-  guides(
-    fill = guide_legend(title="Treatment"),
-    color= guide_legend(title="Treatment"))+
-  scale_color_scico_d(begin = 0.9, end = 0.1, palette = a_palette)+
-  scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
-ggsave("24_sug_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP24",
-       width = 10, height = 6)
-
 # fluorescence
 ## gsw
 mod24_gsw <- lm(log(gsw) ~ treatment + rh_s, data = filter(d24_li, gsw>0))
@@ -2914,7 +3110,10 @@ predict_plot(mod24_gsw, filter(d24_li, gsw>0), gsw, rh_s, treatment,
   ylab("Stomatal Conductance (mol m-2 s-1)")+
   xlab("Relative Humidity (%)")+
   ylim(0,2)+
-  labs(title = str_wrap("Observed data (points) vs predicted (lines with 95% confidence interval) for stomatal conductance across relative humidity and microbial consortium inoculation timing in tomato plants", 50))+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
   guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
@@ -2922,9 +3121,10 @@ predict_plot(mod24_gsw, filter(d24_li, gsw>0), gsw, rh_s, treatment,
   scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
 ggsave("24_gsw_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP24",
        width = 10, height = 6)
-
+ggsave("24_gsw_pred_CI.png", path = "C:/Github/Thesis/figures/TIP24",
+       width = 10, height = 6)
 ## phips2
-mod24_ps2 <- lmer(logit(phips2) ~ treatment + AmbientLight + (1 | Device),
+mod24_ps2 <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | Device),
                        data = d24_ps2_joined)
 summary(mod24_ps2)
 AIC(mod24_ps2)
@@ -2938,7 +3138,10 @@ predict_plot(mod24_ps2_2, d24_ps2_joined, phips2, daysfromgermination, treatment
   ylab("Photosystem II Efficiency (PhiPS2)")+
   xlab("Days From Germination")+
   ylim(0.55, 0.8)+
-  labs(title = str_wrap("Observed data (points) vs predicted (lines with 95% confidence interval) for photosystem II efficiency across days from germination and microbial consortium inoculation timing in tomato plants", 50))+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
   guides(
     fill = guide_legend(title="Treatment"),
     color= guide_legend(title="Treatment"))+
@@ -2946,7 +3149,8 @@ predict_plot(mod24_ps2_2, d24_ps2_joined, phips2, daysfromgermination, treatment
   scale_fill_scico_d(begin = 0.9, end = 0.1, palette = a_palette)
 ggsave("24_phi2_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP24",
        width = 10, height = 6)
-
+ggsave("24_phi2_pred_CI.png", path = "C:/Github/Thesis/figures/TIP24",
+       width = 10, height = 6)
 ### box plot of logit PhiPS2 by treatment
 ggplot(data = d24_ps2_joined, aes(x= treatment, y = phips2, 
                          fill=treatment, color=treatment, shape = Device)) +
@@ -2955,7 +3159,8 @@ ggplot(data = d24_ps2_joined, aes(x= treatment, y = phips2,
   scale_fill_manual(values=four_colors)+
   scale_color_manual(values=four_colors)+
   labs(
-    title="PhiPS2 by Inoculation Treatment in Tomato"
+    title=NULL,
+    subtitle = NULL
   ) +
   ylab("Photosystem II Efficiency (PhiPS2)")+
   xlab("Treatment")+
@@ -2972,5 +3177,7 @@ ggplot(data = d24_ps2_joined, aes(x= treatment, y = phips2,
     title = element_text(size=title_size, family="open", face="bold")
   )
 ggsave("24_phi2_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       width = 10, height = 8)
+ggsave("24_phi2_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
        width = 10, height = 8)
 ```

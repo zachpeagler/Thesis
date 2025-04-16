@@ -392,9 +392,21 @@ summary(model_gsw)
 predict_plot(model_gsw, li_data, gsw, rh_s, Treatment,
              correction = "exponential")
 
+dfpca <- pca_data(data_tim_fluoro, data_tim_fluoro[,c(10:14)])
+pca_plot(data_tim_fluoro$Treatment, data_tim_fluoro[,c(10:14)])+
+  xlim(-0.8, 0.8)
+
+modgswpc <- lm(log(gsw) ~ Treatment + PC1 + PC2, data = dfpca)
+AIC(modgswpc)
+summary(modgswpc)
+
+modps2pc <- lm(LogitPhiPS2 ~ Treatment + PC1 + PC2, data = dfpca)
+AIC(modps2pc)
+summary(modps2pc)
+
 summary(model_fl_phi2<- lm(
-  logitPS2 ~ Treatment + Date,
-  data = li_data))
+  LogitPhiPS2 ~ Treatment + Date,
+  data = data_tim_fluoro))
 
 ```
 
