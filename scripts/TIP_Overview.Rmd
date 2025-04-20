@@ -579,65 +579,62 @@ d23_fl_means2 <- d23_fl %>%
 ## Li-600
 d23_li <- read.csv(d23_li_file, stringsAsFactors = T) %>%
   mutate(Treatment = case_when(
-     Row==1~"Control",
-     Row==2~"Soil",
-     Row==3~"Foliar",
-     Row==4~"Soil+Foliar",
-            TRUE~NA),
-     Row = case_when(
-       Row==1~"A",
-       Row==2~"B",
-       Row==3~"C",
-       Row==4~"D"
-     ),
-    soil = case_when(
+    Row==1~"Control",
+    Row==2~"Soil",
+    Row==3~"Foliar",
+    Row==4~"Soil+Foliar",
+    TRUE~NA),
+    Row = case_when(
+      Row==1~"A",
+      Row==2~"B",
+      Row==3~"C",
+      Row==4~"D"
+    ),
+    Soil = case_when(
       Row=="A"~FALSE,
       Row=="B"~TRUE,
       Row=="C"~FALSE,
       Row=="D"~TRUE
     ),
-    foliar = case_when(
+    Foliar = case_when(
       Row=="A"~FALSE,
       Row=="B"~FALSE,
       Row=="C"~TRUE,
       Row=="D"~TRUE
     )) %>%
-  filter(leak_pct<10 & gsw > 0) %>%
-  rename(Date_ref = Date) %>%
-  mutate(Date = parse_date_time(Date_ref, orders = "mdy"),
+  filter(leak_pct<10 & gsw > 0 & gsw < 5) %>%
+  mutate(Date = parse_date_time(Date, orders = "mdy"),
          Date = as.Date(Date),
          Time = parse_date_time(Time, orders = "T"),
          DaysFromGermination = as.numeric(round(difftime(Date, germdate23, units = c("days")), 0)),
-         plant_fac = as.factor(paste0(Row, Pot)),
+         Plant = as.factor(paste0(Row, Pot)),
          Treatment = factor(Treatment, 
                             levels = treatment_order23),
-         logitPS2 = logit(PhiPS2, FALSE)
+         LogitPhiPS2 = logit(PhiPS2, FALSE)
   ) %>%
   group_by(DaysFromGermination) %>%
-  mutate(MinutesFromStart = round(difftime(Time, min(Time), units = "mins"), 2)) %>%
+  mutate(MinutesFromStart = as.numeric(round(difftime(Time, min(Time), units = "mins"), 2))) %>%
   ungroup() %>%
   mutate(
-    Time = format(Time, "%H:%M:%S")
+    Time = as.factor(format(Time, "%H:%M:%S"))
   )
-d23_li <- d23_li[,c(2,3,7,8,9,16,27,31,33,34,35,36,38,39,61,62,63,64,65,66,67,68)]
-colnames(d23_li) <- tolower(colnames(d23_li))
 
 ## multispeq
-d23_m <- read.csv(d23_m_file)[,c(1,2,3,4,6,7,8,17,23,30,31,37,49,55)] %>%
-    rename(Pot = Pot.ID) %>%
-    mutate(Treatment = case_when(
-     Row=="A"~"Control",
-     Row=="B"~"Soil",
-     Row=="C"~"Foliar",
-     Row=="D"~"Soil+Foliar",
-            TRUE~NA),
-    soil = case_when(
+d23_m <- read.csv(d23_m_file) %>%
+  rename(Pot = Pot.ID) %>%
+  mutate(Treatment = case_when(
+    Row=="A"~"Control",
+    Row=="B"~"Soil",
+    Row=="C"~"Foliar",
+    Row=="D"~"Soil+Foliar",
+    TRUE~NA),
+    Soil = case_when(
       Row=="A"~FALSE,
       Row=="B"~TRUE,
       Row=="C"~FALSE,
       Row=="D"~TRUE
     ),
-    foliar = case_when(
+    Foliar = case_when(
       Row=="A"~FALSE,
       Row=="B"~FALSE,
       Row=="C"~TRUE,
@@ -653,43 +650,57 @@ d23_m <- read.csv(d23_m_file)[,c(1,2,3,4,6,7,8,17,23,30,31,37,49,55)] %>%
     Row = as.factor(Row),
     Device.ID = as.factor(Device.ID),
     Date = as.Date(time, "%m/%d/%Y"),
+    DaysFromGermination = as.numeric(round(difftime(Date, germdate23, units = c("days")), 0)),
     datetime = parse_date_time(time, "%m/%d/%Y %H:%M"),
     Time = format(datetime, "%H:%M:%S"),
-    logitPS2 = logit(Phi2, FALSE),
-    logitFvPFmP = logit(FvP_over_FmP, FALSE)
+    Time = parse_date_time(Time, orders = "T"),
+    LogitPhiPS2 = logit(Phi2, FALSE),
+  ) %>%
+  group_by(DaysFromGermination) %>%
+  mutate(MinutesFromStart = as.numeric(round(difftime(Time, min(Time), units = "mins"), 2))) %>%
+  ungroup() %>%
+  mutate(
+    Time = as.factor(format(Time, "%H:%M:%S"))
   )
+
+data_til_fluoro <- d23_li[,c(61,62,63,2,3,64,67,8,7,65,31,33,35,39,34,9,27,66)] %>%
+  rename(AmbientHumidity = rh_s,
+         AmbientTemperature = Tref,
+         AmbientPressure = P_atm,
+         AmbientLight = Qamb,
+         LeafTemperature = Tleaf
+         ) %>%
+  mutate(
+    Time = as.factor(Time),
+    Row = as.factor(Row),
+    Pot = as.factor(Pot),
+    AmbientLight = as.numeric(AmbientLight),
+    Device = "Li-600"
+  )
+
+temp_til_fluoro <- d23_m[,c(59,60,61,67,64,65,69,4,3,63,6,8,7,30,23,45,37,68)] %>%
+  rename(
+    AmbientHumidity = Ambient.Humidity,
+    AmbientTemperature = Ambient.Temperature,
+    AmbientPressure = Ambient.Pressure,
+    AmbientLight = Light.Intensity..PAR.,
+    LeafTemperature = Leaf.Temperature,
+    gsw = pump,
+    PhiPS2 = Phi2
+  ) %>% mutate(
+    Treatment = factor(Treatment, levels = treatment_order23),
+    AmbientPressure = AmbientPressure / 10,
+    Time = as.factor(Time),
+    gsw = as.numeric("NA"),
+    Device = "MultispeQ"
+  )
+
+d23_ps2_joined <- rbind(data_til_fluoro, temp_til_fluoro) %>%
+  mutate(Device = as.factor(Device))
+
+colnames(d23_li) <- tolower(colnames(d23_li))
 colnames(d23_m) <- tolower(colnames(d23_m))
-#### a really weird way to remove the original datetime
-d23_m <- d23_m[,c(1:12,14:24)]
-
-## 2023 phips2 joined
-d23_ps2_joined <- d23_li %>% mutate(
-  Device = "Li600"
-) %>% rename(AmbientLight = qamb,
-             AmbientPressure = p_atm,
-             AmbientHumidity = rh_s,
-             AmbientTemperature = tref,
-             LeafTemperature = tleaf,
-             Plant = plant_fac) %>%
-  mutate(AmbientPressure = AmbientPressure * 10)
-d23_ps2_joined <- d23_ps2_joined[,c(1,18,15,16,17,19,20,23,8,9,10,11,14,7,21)]
-
-m_temp_23 <- d23_m %>% mutate(
-  Device = "MultispeQ",
-  daysfromgermination = as.numeric(round(difftime(date, germdate23, units = c("days")), 0))) %>%
-  rename(AmbientLight = light.intensity..par.,
-             AmbientPressure = ambient.pressure,
-             AmbientHumidity = ambient.humidity,
-             AmbientTemperature = ambient.temperature,
-             LeafTemperature = leaf.temperature,
-             phips2 = phi2,
-             Plant = plant)
-m_temp_23 <- m_temp_23[,c(21,19,14,15,16,25,18,24,5,7,9,6,10,12,22)]
-
-d23_ps2_joined <- rbind(d23_ps2_joined, m_temp_23) %>%
-  mutate(Device = as.factor(Device),
-         date = as.Date(date))
-
+colnames(d23_ps2_joined) <- tolower(colnames(d23_ps2_joined))
 
 ## stomatal density
 d23_st <- read.csv(d23_st_file) %>%
@@ -2505,6 +2516,7 @@ ggsave("23_phi2_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP23",
        width = 10, height = 6)
 ggsave("23_phi2_pred_CI.png", path = "C:/Github/Thesis/figures/TIP23",
        width = 10, height = 6)
+
 ## gsw
 mod23_gsw <- lm(log(gsw) ~ treatment + rh_s, data = d23_li)
 AIC(mod23_gsw)
@@ -2512,6 +2524,14 @@ summary(mod23_gsw)
 comps <- glht(mod23_gsw, linfct = mcp(treatment = "Tukey"))
 mod23_gsw_letters <- cld(comps)$mcletters$Letters
 print(mod23_gsw_letters)
+
+mod23_gsw2 <- lm(log(gsw) ~ treatment + rh_s + tref + daysfromgermination + minutesfromstart, data = d23_li)
+AIC(mod23_gsw2)
+summary(mod23_gsw2)
+
+predict_plot(mod23_gsw2, d23_li, gsw, rh_s, treatment, 100,
+             correction = "exponential")
+
 predict_plot(mod23_gsw, d23_li, gsw, rh_s, treatment, 100,
              correction = "exponential")+
   ylab("Stomatal Conductance  (mol m-2 s-1)")+

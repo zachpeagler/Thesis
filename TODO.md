@@ -7,3 +7,4 @@
 - [x] add preliminary BB graphs and models
 - [x] Add PCA for fluoro variables
   - [x] til, tim, and tit
+- [ ] add pcr PhiPS2 models (they fit best)

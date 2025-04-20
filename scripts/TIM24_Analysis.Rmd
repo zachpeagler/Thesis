@@ -15,7 +15,7 @@ This trial was conducted in a greenhouse at Kennesaw State University (KSU). Pla
 ```{r packages, include=FALSE}
 require(tidyverse); require(lmerTest); require(showtext); require(MASS); require(scico); require(pwr); require(devtools); require(multcomp); require(rstatix); require(car); require(vegan)
 # custom package
-install_github("zachpeagler/ztils")
+install_github("zachpeagler/ztils", upgrade = "never")
 require(ztils)
 ```
 
@@ -90,7 +90,7 @@ li_data <- read.csv(li_data_file)[,c(2,3,7,8,9,10,17,28,32,34,35,36,39,40)] %>%
          DaysFromGermination = as.numeric(round(difftime(Date, tim_germ_date, units = c("days")), 0)),
          Date = as.factor(as.Date(Date)),
          Time = parse_date_time(Time, orders = "T"),
-         Time = as.factor(format(Time, "%H:%M:%S")),
+#         Time = as.factor(format(Time, "%H:%M:%S")),
          Treatment = factor(Treatment, 
                             levels = tim_treatment_order),
          Inoculation = case_when(
@@ -123,7 +123,13 @@ li_data <- read.csv(li_data_file)[,c(2,3,7,8,9,10,17,28,32,34,35,36,39,40)] %>%
          Plant = factor(Plant, levels = tim_levels),
          P_atm = P_atm * 100
   ) %>%
-  rename(Pot=Column)
+  rename(Pot=Column) %>%
+  group_by(DaysFromGermination) %>%
+  mutate(MinutesFromStart = round(difftime(Time, min(Time), units = "mins"), 2)) %>%
+  ungroup() %>%
+  mutate(
+  Time = as.factor(format(Time, "%H:%M:%S"))
+  )
 
 data_tim_fluoro <- li_data[,c(5,16,17,1,2,15,3,4,18,9,10,12,14,11,6,8,19)] %>%
   rename(AmbientHumidity = rh_s,
@@ -172,7 +178,8 @@ h_data <- read.csv(h_data_file) %>%
          Row = as.factor(Row),
          Column = as.factor(Column)
   ) %>%
-  rename(Pot = Column)
+  rename(Pot = Column) %>%
+  filter(Height > 0)
 
 data_tim_height <- h_data[,c(3,7,8,4,6,1,2,9,5)]
 
@@ -224,9 +231,9 @@ data_tim_ds <- DS_data[,c(3,10,11,1,2,12,4,5,6,7,8,9)]
 ### 2.1.1. Fluoro Exploratory Analysis
 ``` {r fluoro_exploratory_analysis, include=TRUE}
 #gsw
-multiPDF_Z(filter(li_data, gsw >0)$gsw, 100, "all", a_palette, "gsw")
-multiCDF_Z(filter(li_data, gsw >0)$gsw, 100, "all", a_palette, "gsw")
-multiKS_cont(filter(li_data, gsw >0)$gsw, "all")
+multipdf_plot(filter(li_data, gsw >0)$gsw, 100, "all", a_palette, "gsw")
+multicdf_plot(filter(li_data, gsw >0)$gsw, 100, "all", a_palette, "gsw")
+multiks_cont(filter(li_data, gsw >0)$gsw, "all")
 
 ###### Not significantly different than a Gamma or Normal distribution.
 ###### Try models with both.
@@ -389,6 +396,10 @@ model_gsw<- lm(log(gsw) ~ Treatment + rh_s, data = li_data)
 AIC(model_gsw)
 summary(model_gsw)
 
+model_gsw2<- lm(log(gsw) ~ Treatment + rh_s + MinutesFromStart, data = li_data)
+AIC(model_gsw2)
+summary(model_gsw2)
+
 predict_plot(model_gsw, li_data, gsw, rh_s, Treatment,
              correction = "exponential")
 
@@ -404,6 +415,7 @@ modps2pc <- lm(LogitPhiPS2 ~ Treatment + PC1 + PC2, data = dfpca)
 AIC(modps2pc)
 summary(modps2pc)
 
+
 summary(model_fl_phi2<- lm(
   LogitPhiPS2 ~ Treatment + Date,
   data = data_tim_fluoro))
@@ -415,9 +427,9 @@ summary(model_fl_phi2<- lm(
 ``` {r height_analysis, include = TRUE}
 
 # height
-multiPDF_Z(filter(h_data, Height >0)$Height, 100, "all", a_palette, "Height")
-multiCDF_Z(filter(h_data, Height >0)$Height, 100, "all", a_palette, "Height")
-multiKS_cont(filter(h_data, Height >0)$Height, "all")
+multipdf_plot(filter(h_data, Height >0)$Height, 100, "all", a_palette, "Height")
+multipdf_plot(filter(h_data, Height >0)$Height, 100, "all", a_palette, "Height")
+multiks_cont(filter(h_data, Height >0)$Height, "all")
 
 
 ### box plot of height by treatment
@@ -444,7 +456,6 @@ ggplot(data = h_data, aes(x= Treatment, y = Height,
 # height scatterplot
 ggplot(data=h_data, aes(x=Date, y=Height, color=Treatment))+
   geom_jitter(size=2)+
-  facet_wrap(~Treatment)+
   scale_color_manual(values = four_colors)+
   labs(
     title="Height by Date and Treatment in Tomato"
@@ -458,12 +469,26 @@ ggplot(data=h_data, aes(x=Date, y=Height, color=Treatment))+
     title = element_text(size=title_size, family="open", face="bold")
   )
 
-summary(model_h <- lm(
-  Height ~ Treatment,
-  data = h_data))
+model_h <- lm(
+  log(Height) ~ Treatment + DaysFromGermination,
+  data = h_data)
+summary(model_h)
+confint(model_h)
+predict_plot(model_h, h_data, Height, DaysFromGermination, Treatment, correction = "exponential") +
+  labs(title = NULL, subtitle = NULL)
+
+ggsave("tim_height_pred.svg", height = 6, width = 10, path = "C:/Github/Thesis/figures/TIM")
+ggsave("tim_height_pred.png", height = 6, width = 10, path = "C:/Github/Thesis/figures/TIM")
 
 comps <- glht(model_h, linfct = mcp(Treatment = "Tukey"))
 cld(comps)
+
+model_h2 <- glm(Height ~ Treatment + DaysFromGermination, data = h_data,
+                family = Gamma(link = "log"))
+summary(model_h2)
+glm_pseudor2(model_h2)
+predict_plot(model_h2, h_data, Height, DaysFromGermination, Treatment) +
+  labs(title = NULL, subtitle = NULL)
 
 ```
 
@@ -532,45 +557,5 @@ summary(model_RSL <- (lm(
 summary(model_RSM <- (lm(
   logit(RS_Mass) ~ Treatment,
   data = DS_data)))
-
-scaled_ds_vars <- data.frame(apply(DS_data[,c(4:7)], 2, scale))
-p1 <- rda(scaled_ds_vars)
-summary(p1)
-biplot(p1)
-
-
-tr <- sort(unique(DS_data$Treatment))
-Treatments <- tr[match(DS_data$Treatment, tr)]
-
-cols <- c("red", "pink", "lightblue", "blue")
-
-px <- scores(p1)$sites
-vx <- scores(p1)$species
-
-ggplot()+
-  geom_point(data=px, aes(x=PC1, y=PC2, color=Treatments, shape=Treatments, fill=Treatments), size=3)+
-  scale_color_manual(values = four_colors)+
-  scale_fill_manual(values = four_colors)+
-  scale_shape_manual(values = four_shapes)+
-  geom_segment(data = vx, aes(x=0, y=0, xend=PC1*.45, yend=PC2*.45), color = "black")+
-  annotate("text", x=vx[,1]*.5, y=vx[,2]*.5, label = rownames(vx), size = 8)+
-  labs(title=str_wrap("Principal Component Analysis for Tomato Destructive Sampling Metrics", 40))+
-  xlab("PC1 (67.76%)")+
-  ylab("PC2 (31.41%)")+
-  theme_bw()+
-  theme(
-    text = element_text(size=14, family="mont", lineheight=0.8),
-    axis.title = element_text(size=16, family = "mont", face= "bold"),
-    title = element_text(size=20, family="open", face="bold")
-  )
-
-pca_data <- function(data, pcavars){
-  p1 <- rda(pcavars)
-  outdata <- cbind(data, p1$CA$u)
-  return(outdata)
-}
-
-ds_data_pca <- pca_data(DS_data, scaled_ds_vars)
-pcr <- lm(PC1 ~ Treatment, data = ds_data_pca)
 
 ```
