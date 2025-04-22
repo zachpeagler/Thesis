@@ -38,13 +38,13 @@ font_add_google("Montserrat", family = "mont")
 showtext_auto()
 # font sizes
 ## title
-title_size = 16
+title_size = 20
 ## subtitle
-subtitle_size = 12
+subtitle_size = 16
 ## caption
-caption_size = 10
+caption_size = 14
 ## text
-text_size = 10
+text_size = 12
 
 # custom shapes
 four_shapes = c(15,16,17,23)
@@ -125,7 +125,7 @@ li_data <- read.csv(li_data_file)[,c(2,3,7,8,9,10,17,28,32,34,35,36,39,40)] %>%
   ) %>%
   rename(Pot=Column) %>%
   group_by(DaysFromGermination) %>%
-  mutate(MinutesFromStart = round(difftime(Time, min(Time), units = "mins"), 2)) %>%
+  mutate(MinutesFromStart = as.numeric(round(difftime(Time, min(Time), units = "mins"), 2))) %>%
   ungroup() %>%
   mutate(
   Time = as.factor(format(Time, "%H:%M:%S"))
@@ -396,30 +396,73 @@ model_gsw<- lm(log(gsw) ~ Treatment + rh_s, data = li_data)
 AIC(model_gsw)
 summary(model_gsw)
 
-model_gsw2<- lm(log(gsw) ~ Treatment + rh_s + MinutesFromStart, data = li_data)
+model_gsw2<- lm(log(gsw) ~ Treatment + rh_s + MinutesFromStart + DaysFromGermination, data = li_data)
 AIC(model_gsw2)
 summary(model_gsw2)
+comps <- glht(model_gsw2, linfct = mcp(Treatment = "Tukey"))
+mod_gsw_letters <- cld(comps)$mcletters$Letters
+print(mod_gsw_letters)
 
 predict_plot(model_gsw, li_data, gsw, rh_s, Treatment,
-             correction = "exponential")
+             correction = "exponential") +
+  labs(title = NULL, subtitle = NULL) +
+  ylab(str_wrap("Stomatal Conductance (mol m-2 s-1)", 20))+
+  xlab("Relative Humidity (%)")+
+  theme(
+    legend.position="right",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("tim_gsw_pred.svg", path = "C:/Github/Thesis/figures/TIM",
+       width = 10, height = 6)
+ggsave("tim_gsw_pred.png", path = "C:/Github/Thesis/figures/TIM",
+       width = 10, height = 6)
 
 dfpca <- pca_data(data_tim_fluoro, data_tim_fluoro[,c(10:14)])
 pca_plot(data_tim_fluoro$Treatment, data_tim_fluoro[,c(10:14)])+
+  xlim(-0.8, 0.8)
+
+dfpca2 <- pca_data(li_data, li_data[,c(9:12, 14, 15, 20)])
+pca_plot(li_data$Treatment, li_data[,c(9:12, 14, 15, 20)])+
   xlim(-0.8, 0.8)
 
 modgswpc <- lm(log(gsw) ~ Treatment + PC1 + PC2, data = dfpca)
 AIC(modgswpc)
 summary(modgswpc)
 
-modps2pc <- lm(LogitPhiPS2 ~ Treatment + PC1 + PC2, data = dfpca)
+modgswpc2 <- lm(log(gsw) ~ Treatment + PC1 + PC2, data = dfpca2)
+AIC(modgswpc2)
+summary(modgswpc2)
+
+modps2pc <- lm(logit(PhiPS2) ~ Treatment + PC1 + PC2, data = dfpca)
 AIC(modps2pc)
 summary(modps2pc)
+comps <- glht(modps2pc, linfct = mcp(Treatment = "Tukey"))
+mod_ps2pc_letters <- cld(comps)$mcletters$Letters
+print(mod_ps2pc_letters)
 
+modps2pc2 <- lm(logit(PhiPS2) ~ Treatment + PC1, data = dfpca)
 
-summary(model_fl_phi2<- lm(
-  LogitPhiPS2 ~ Treatment + Date,
-  data = data_tim_fluoro))
+predict_plot(modps2pc2, dfpca, PhiPS2, PC1, Treatment,
+             correction = "logit") +
+  labs(title = NULL, subtitle = NULL) +
+  ylab("PhiPS2")+
+  xlab("PC1")+
+  theme(
+    legend.position="right",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("tim_ps2_pred.svg", path = "C:/Github/Thesis/figures/TIM",
+       width = 10, height = 6)
+ggsave("tim_ps2_pred.png", path = "C:/Github/Thesis/figures/TIM",
+       width = 10, height = 6)
 
+model_fl_phi2<- lm(LogitPhiPS2 ~ Treatment + DaysFromGermination, data = data_tim_fluoro)
+AIC(model_fl_phi2)
+summary(model_fl_phi2)
 ```
 
 ### Height Analysis
@@ -475,7 +518,14 @@ model_h <- lm(
 summary(model_h)
 confint(model_h)
 predict_plot(model_h, h_data, Height, DaysFromGermination, Treatment, correction = "exponential") +
-  labs(title = NULL, subtitle = NULL)
+  labs(title = NULL, subtitle = NULL)+
+  ylab("Height (cm)")+
+  xlab("Days From Germination")+
+    theme(
+    legend.position="right",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold")
+  )
 
 ggsave("tim_height_pred.svg", height = 6, width = 10, path = "C:/Github/Thesis/figures/TIM")
 ggsave("tim_height_pred.png", height = 6, width = 10, path = "C:/Github/Thesis/figures/TIM")
@@ -549,13 +599,68 @@ ggplot(data=DS_data, aes(x=Treatment, y=RS_Mass, color=Treatment))+
     title="Root:Shoot Mass by Treatment"
   )
 
+model_RSL <- lm(logit(RS_Length) ~ Treatment, data = DS_data)
+AIC(model_RSL)
+summary(model_RSL)
+comps <- glht(model_RSL, linfct = mcp(Treatment = "Tukey"))
+mod_RSL_letters <- cld(comps)$mcletters$Letters
+print(mod_RSL_letters)
 
-summary(model_RSL <- (lm(
-  logit(RS_Length) ~ Treatment,
-  data = DS_data)))
+ggplot(data = DS_data, aes(x= Treatment, y = RS_Length, 
+                         fill=Treatment, color=Treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  ylab("Root : Shoot Length")+
+  xlab("Treatment")+
+  annotate("text", x=1:4, y=1.5, label = mod_RSL_letters, size=10, family="open")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("tim_RSL_annotated.svg", path = "C:/Github/Thesis/figures/TIM",
+       width = 10, height = 6)
+ggsave("tim_RSL_annotated.png", path = "C:/Github/Thesis/figures/TIM",
+       width = 10, height = 6)
 
-summary(model_RSM <- (lm(
-  logit(RS_Mass) ~ Treatment,
-  data = DS_data)))
 
+model_RSM <- lm(logit(RS_Mass) ~ Treatment, data = DS_data)
+AIC(model_RSM)
+summary(model_RSM)
+comps <- glht(model_RSM, linfct = mcp(Treatment = "Tukey"))
+mod_RSM_letters <- cld(comps)$mcletters$Letters
+print(mod_RSM_letters)
+
+ggplot(data = DS_data, aes(x= Treatment, y = RS_Mass, 
+                         fill=Treatment, color=Treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  ylab("Root : Shoot Mass")+
+  xlab("Treatment")+
+  annotate("text", x=1:4, y=0.75, label = mod_RSM_letters, size=10, family="open")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("tim_RSM_annotated.svg", path = "C:/Github/Thesis/figures/TIM",
+       width = 10, height = 6)
+ggsave("tim_RSM_annotated.png", path = "C:/Github/Thesis/figures/TIM",
+       width = 10, height = 6)
 ```

@@ -65,13 +65,13 @@ showtext_auto()
 ### like this: text_sizes <- c(16, 12, 10)
 ### then retrieve them like text_sizes[1] etc
 ## title
-title_size = 16
+title_size = 20
 ## subtitle
-subtitle_size = 12
+subtitle_size = 16
 ## caption
-caption_size = 10
+caption_size = 14
 ## text
-text_size = 10
+text_size = 12
 
 # custom shapes
 four_shapes = c(15,16,17,23)
@@ -702,6 +702,9 @@ colnames(d23_li) <- tolower(colnames(d23_li))
 colnames(d23_m) <- tolower(colnames(d23_m))
 colnames(d23_ps2_joined) <- tolower(colnames(d23_ps2_joined))
 
+# d23 pca data
+d23_pca <- pca_data(d23_ps2_joined, d23_ps2_joined[,c(6,7,11:15)])
+
 ## stomatal density
 d23_st <- read.csv(d23_st_file) %>%
   rename(pot = plant) %>%
@@ -795,6 +798,13 @@ d24_f_summary <- d24_f %>%
          pfungus = round(fungus_sum/fruit_sum, 4),
          pcracking = round(cracking_sum/fruit_sum, 4)
          )
+
+### Sum the fruit, BER, sugar, and mass by treatment group, then get ber probability.
+d24_f_summary_marketable <- d24_f %>%
+  filter(ber == FALSE, fungus == FALSE, cracking == FALSE) %>%
+  group_by(treatment, germination, transplantation, plant) %>%
+  summarise_at(vars(fruit, mass), list(sum=sum)) %>%
+  ungroup()
 
 d24_f_summary2 <- d24_f %>%
   group_by(treatment) %>%
@@ -2348,8 +2358,10 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = mass_mean,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
-ggsave("23_mass_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
-ggsave("23_mass_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_mass_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width =10)
+ggsave("23_mass_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width =10)
 ## ber
 mod23_ber <- lm(logit(pber) ~ treatment, data = d23_fg_summary)
 AIC(mod23_ber)
@@ -2387,8 +2399,44 @@ ggplot(data = d23_fl_means, aes(x= treatment, y = sugar_avg_mean,
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
     title = element_text(size=title_size, family="open", face="bold")
   )
-ggsave("23_sug_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
-ggsave("23_sug_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_sug_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width =10)
+ggsave("23_sug_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width =10)
+
+## sug by mass
+d23_fl_means$sug <- d23_fl_means$sugar_avg_mean / 100
+mod23_sug2 <- lm(logit(sug) ~ treatment + log(mass_mean), data = d23_fl_means)
+AIC(mod23_sug2)
+summary(mod23_sug2)
+comps <- glht(mod23_sug2, linfct = mcp(treatment = "Tukey"))
+mod23_sug2_letters <- cld(comps)$mcletters$Letters
+print(mod23_sug2_letters)
+
+predict_plot(mod23_sug2, d23_fl_means, sug, mass_mean, treatment, 100, correction = "logit")+
+  ylab("Sugar (%)")+
+  xlab("Mass (g)")+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+    scale_y_continuous(labels = yticks)+
+  guides(fill=guide_legend(title="Treatment"),
+         color=guide_legend(title="Treatment"))+
+  theme(
+    legend.position="inside",
+    legend.position.inside = c(.8,.8),
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    axis.text = element_text(size=subtitle_size, family = "mont"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("23_sugbymass_pred_CI.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
+ggsave("23_sugbymass_pred_CI.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
+
+
 ## fruit count
 mod23_fc <- glm(fruit_sum ~ treatment, data = d23_fg_summary,
                 family = poisson(link = "identity"))
@@ -2410,18 +2458,21 @@ ggplot(data = d23_fg_summary, aes(x= treatment, y = fruit_sum,
     subtitle = NULL
   ) +
   annotate("text", x=1:4, y=100, label = mod23_fc_letters, size=10, family="open")+
-  ylab("Fruit")+
+  ylab("Total Fruit")+
   xlab("Treatment")+
   theme_bw()+
   theme(
     legend.position="none",
     text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    axis.text = element_text(size=subtitle_size, family = "mont"),
     title = element_text(size=title_size, family="open", face="bold")
   )
 
-ggsave("23_fc_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
-ggsave("23_fc_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_fc_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
+ggsave("23_fc_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
 
 
 ## marketable fruit count
@@ -2446,18 +2497,21 @@ ggplot(data = d23_fl_summary, aes(x= treatment, y = fruit_sum,
     subtitle = NULL
   ) +
   annotate("text", x=1:4, y=35, label = mod23_fc2_letters, size=10, family="open")+
-  ylab("Fruit")+
+  ylab("Marketable Fruit")+
   xlab("Treatment")+
   theme_bw()+
   theme(
     legend.position="none",
     text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
     axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    axis.text = element_text(size=subtitle_size, family = "mont"),
     title = element_text(size=title_size, family="open", face="bold")
   )
 
-ggsave("23_mfc_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
-ggsave("23_mfc_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_mfc_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
+ggsave("23_mfc_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
 
 ## total fruit mass
 mod23_msum <- lm(mass_sum ~ treatment, data = d23_fg_summary)
@@ -2469,17 +2523,16 @@ print(mod23_msum_letters)
 
 
 # fluorescence
-d23_ps2_pcadat <- pca_data(d23_ps2_joined, d23_ps2_joined[,c(9:13)])
 ## phi2 pca
-mod23_phi2_3 <- lmer(logit(phips2) ~ treatment + PC1 + (1 | Device), data = d23_ps2_pcadat)
+mod23_phi2_3 <- lmer(logit(phips2) ~ treatment + PC1 + PC2 + (1 | device), data = d23_pca)
 AIC(mod23_phi2_3)
 summary(mod23_phi2_3)
 r.squaredGLMM(mod23_phi2_3)
 comps <- glht(mod23_phi2_3, linfct = mcp(treatment = "Tukey"))
 mod23_phi2_3_letters <- cld(comps)$mcletters$Letters
 print(mod23_phi2_3_letters)
-mod23_phi2_3r <- lm(logit(phips2) ~ treatment + PC1, data = d23_ps2_pcadat)
-predict_plot(mod23_phi2_3r, d23_ps2_pcadat, phips2, PC1, treatment, 100,
+mod23_phi2_3r <- lm(logit(phips2) ~ treatment + PC1, data = d23_pca)
+predict_plot(mod23_phi2_3r, d23_pca, phips2, PC1, treatment, 100,
              correction = "logit")+
   ylim(0.5,0.8)+
   ylab("PhiPS2")+
@@ -2492,7 +2545,7 @@ predict_plot(mod23_phi2_3r, d23_ps2_pcadat, phips2, PC1, treatment, 100,
          color=guide_legend(title="Treatment"))
 
 ## phi2
-mod23_phi2 <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | Device), data = d23_ps2_joined)
+mod23_phi2 <- lmer(logit(phips2) ~ treatment + daysfromgermination + (1 | device), data = d23_ps2_joined)
 AIC(mod23_phi2)
 summary(mod23_phi2)
 r.squaredGLMM(mod23_phi2)
@@ -2529,8 +2582,8 @@ mod23_gsw2 <- lm(log(gsw) ~ treatment + rh_s + tref + daysfromgermination + minu
 AIC(mod23_gsw2)
 summary(mod23_gsw2)
 
-predict_plot(mod23_gsw2, d23_li, gsw, rh_s, treatment, 100,
-             correction = "exponential")
+#predict_plot(mod23_gsw2, d23_li, gsw, rh_s, treatment, 100,
+#             correction = "exponential")
 
 predict_plot(mod23_gsw, d23_li, gsw, rh_s, treatment, 100,
              correction = "exponential")+
@@ -2587,8 +2640,10 @@ ggplot(data = d23_st_sum, aes(x= treatment, y = stomatal_density,
     title = element_text(size=title_size, family="open", face="bold")
   )
 
-ggsave("23_st_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23")
-ggsave("23_st_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23")
+ggsave("23_st_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width =10)
+ggsave("23_st_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width =10)
 
 ```
 
@@ -3103,18 +3158,271 @@ ggplot(data = d24_ps2_joined, aes(x= time, y = logitps2,
 mod24_ber <- lm(logit(pber) ~ treatment, data=d24_f_summary)
 AIC(mod24_ber)
 summary(mod24_ber)
+comps <- glht(mod24_ber, linfct = mcp(treatment = "Tukey"))
+mod24_ber_letters <- cld(comps)$mcletters$Letters
+print(mod24_ber_letters)
+
+ggplot(data = d24_f_summary, aes(x= treatment, y = pber * 100, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=22, label = mod24_ber_letters, size=10, family="open")+
+  ylab("Percent BER")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("24_ber_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+ggsave("24_ber_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
 
 ## mass
 mod24_mass <- lm(log(mass_mean) ~ treatment, data=d24_f_means)
 AIC(mod24_mass)
 summary(mod24_mass)
 confint(mod24_mass)
+comps <- glht(mod24_mass, linfct = mcp(treatment = "Tukey"))
+mod24_mass_letters <- cld(comps)$mcletters$Letters
+print(mod24_mass_letters)
+
+ggplot(data = d24_f_means, aes(x= treatment, y = mass_mean, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=200, label = mod24_mass_letters, size=10, family="open")+
+  ylab("Mass (g)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("24_mass_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+ggsave("24_mass_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+
 
 ## sugar
-mod24_sug_bp <- lm(sugar_avg_mean ~ treatment, data=d24_f_means)
-summary(mod24_sug_bp)
-comps <- glht(mod24_sug_bp, linfct=mcp(treatment="Tukey"))
-cld(comps)
+d24_f_means$sug <- d24_f_means$sugar_avg_mean / 100
+mod24_sug <- lm(logit(sug) ~ treatment, data=d24_f_means)
+summary(mod24_sug)
+comps <- glht(mod24_sug, linfct = mcp(treatment = "Tukey"))
+mod24_sug_letters <- cld(comps)$mcletters$Letters
+print(mod24_sug_letters)
+
+ggplot(data = d24_f_means, aes(x= treatment, y = sug * 100, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=8.5, label = mod24_sug_letters, size=10, family="open")+
+  ylab("Sugar (%)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("24_sug_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+ggsave("24_sug_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+
+## sugar by mass
+mod24_sugm <- lm(logit(sug) ~ treatment + log(mass_mean), data=d24_f_means)
+summary(mod24_sugm)
+comps <- glht(mod24_sugm, linfct = mcp(treatment = "Tukey"))
+mod24_sugm_letters <- cld(comps)$mcletters$Letters
+print(mod24_sugm_letters)
+
+yticks <- function(x) {
+  x * 100
+}
+predict_plot(mod24_sugm, d24_f_means, sug, mass_mean, treatment, 100, correction = "logit")+
+  labs(title = NULL,
+       subtitle = NULL)+
+  ylab("Sugar (%)")+
+  xlab("Mass (g)")+
+  scale_y_continuous(labels = yticks)+
+  theme_bw()+
+  guides(
+    fill = guide_legend(title="Treatment"),
+    color= guide_legend(title="Treatment"))+
+  theme(
+    legend.position="inside",
+    legend.position.inside = c(.8,.8),
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+ggsave("24_sug_mass_pred.svg", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+ggsave("24_sug_mass_pred.png", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+
+## fruit count
+mod24_fc <- glm(fruit_sum ~ treatment, data=d24_f_summary, family = poisson(link="identity"))
+summary(mod24_fc)
+confint(mod24_fc)
+glm_pseudor2(mod24_fc)
+comps <- glht(mod24_fc, linfct = mcp(treatment = "Tukey"))
+mod24_fc_letters <- cld(comps)$mcletters$Letters
+print(mod24_fc_letters)
+#pairs(emmeans(mod24_fc, ~treatment))
+
+ggplot(data = d24_f_summary, aes(x= treatment, y = fruit_sum, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=80, label = mod24_fc_letters, size=10, family="open")+
+  ylab("Total Fruit")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("24_fc_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+ggsave("24_fc_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+
+## marketable fruit count
+mod24_mfc <- glm(fruit_sum ~ treatment, data=d24_f_summary_marketable, family = poisson(link="identity"))
+summary(mod24_mfc)
+confint(mod24_mfc)
+glm_pseudor2(mod24_mfc)
+comps <- glht(mod24_mfc, linfct = mcp(treatment = "Tukey"))
+mod24_mfc_letters <- cld(comps)$mcletters$Letters
+print(mod24_mfc_letters)
+#pairs(emmeans(mod24_fc, ~treatment))
+
+ggplot(data = d24_f_summary_marketable, aes(x= treatment, y = fruit_sum, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=70, label = mod24_mfc_letters, size=10, family="open")+
+  ylab("Marketable Fruit")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("24_mfc_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+ggsave("24_mfc_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+
+## total mass
+mod24_tm <- lm(mass_sum ~ treatment, data=d24_f_summary)
+summary(mod24_tm)
+confint(mod24_tm)
+comps <- glht(mod24_tm, linfct = mcp(treatment = "Tukey"))
+mod24_tm_letters <- cld(comps)$mcletters$Letters
+print(mod24_tm_letters)
+
+ggplot(data = d24_f_summary, aes(x= treatment, y = mass_sum, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=4000, label = mod24_tm_letters, size=10, family="open")+
+  ylab("Total Mass (g)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("24_tm_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+ggsave("24_tm_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+
+## total marketable mass
+mod24_tmm <- lm(mass_sum ~ treatment, data=d24_f_summary_marketable)
+summary(mod24_tmm)
+confint(mod24_tmm)
+comps <- glht(mod24_tmm, linfct = mcp(treatment = "Tukey"))
+mod24_tmm_letters <- cld(comps)$mcletters$Letters
+print(mod24_tmm_letters)
+
+ggplot(data = d24_f_summary_marketable, aes(x= treatment, y = mass_sum, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=3000, label = mod24_tmm_letters, size=10, family="open")+
+  ylab("Total Marketable Mass (g)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("24_tmm_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
+ggsave("24_tmm_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
+       height = 6, width = 10)
 
 # fluorescence
 ## gsw
