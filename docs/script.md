@@ -1,20 +1,20 @@
 # Thesis Script
 
-## 1. Intro slide
+## Intro slide
 
-Hello everyone! Thank you for coming to my defense, I'm Zach Peagler, and I've been working on encapsulating biostimulants (microbes) and applying them to tomato plants. Much of my work was focused on improving the methodology for the creation of these granules, and the other half focused on the actual results that these granules are capable of producing in tomato plants.
+Hello everyone! Thank you for coming to my defense, I'm Zach Peagler, and I've been working on encapsulating biostimulants (microbes) and applying them to tomato plants. Much of my work was focused on improving the methodology for the creation of these granules, and the other half focused on the actual effects that these granules are capable of producing in tomato plants.
 
-## 2. App slide
+## App slide
 
 I know how boring it can be to listen to someone talk about something you know nothing about for half an hour, so I wanted to give you all a way to interact with the data and see how I came to the conclusions that I did, and to facilitate that I built an app using R, which you can access either through that QR code or the link below it. A laptop is recommended over a phone, but it does work on mobile. Once you get to the webpage, give it a good 20-30 seconds to load, it can take awhile.
 
 (give them a second to open the app)
 
-## 3. Why slide
+## Why slide
 
 The human population surpassed 8 billion recently, and is projected to hit almost 10 billion by 2050. A growing population necessitates a growing food supply, and the predominant method of increasing crop yield up until now is the use of synthetic fertilizers, chemically manufactured sources of phosphorous, nitogen, and potassium that greatly increased crop output. These synthetic fertilizers came with some downsides, including groundwater contamination, water body eutrophication, harmful algae blooms, and ecosystem disruption. These fertilizers are also expensive, accounting for 20-36% of a farm's budget, with these costs greatly increasing in the past several years. Sustainable agriculture solutions are necessary to alleviate the environmental and economic toll of synthetic fertilizers while feeding an expanding human population.
 
-## 4. What slide
+## What slide
 
 We need sustainable agriculture solutions, but what does that look like? Many studies suggest the use of biostimulants, which include plant growth promoting bacteria (PGPBS), arbuscular mycorrhizal fungi, or biologically derived compounds such as humic acid, biochar, and kelp extract. 
 
@@ -23,7 +23,7 @@ In my research, I just focused on the plant growth promoting bacteria or PGPBs.
 Biostimulants face challenges that hinder their wide-spread implementation. Chiefly among those is a lack of awareness. Many farmers don't know the effect that bacteria can have on their plants, and there is a stigma that bacteria are *only* pathogenic and detrimental to their crops. Additionally, biostimulant application methods leave much to be desired. They're often expensive, easily contaminated, and show unreliable performance in the field.
 This is the problem I wanted to tackle in my research. How can we best apply PGPBs to plants?
 
-## 5. How slide
+## How slide
 
 A new application method that has shown promise is encapsulation, where you combine the biostimulant with a polymer solution then drop that into a cross-linker solution, and the result is a biostimulant granule that can be dried for long-term storage and transport.
 
@@ -35,18 +35,18 @@ Both alginate and chitosan have had some studies done looking at their effects o
 
 Some studies even suggest that encapsulation is necessary for PGPBs to achieve maximum effectiveness and viability while also being practical for agricultural implementation.
 
-## 6. Granule Development slide
+## Granule Development slide
 So, I started where any good scientist starts - with the literature. I followed existing protocols to create chitosan granules, and was met with little success. Partially, this was due to the literature conflicting in many ways. Some papers used as little as 1% chitosan, some up to 5%. Some used equal parts chitosan and TPP, some used 1:4 chitosan to TPP. Some papers performed the solution combination while stirring the mixture, others performed it with the TPP solution over ice.
 
 The key for me was changing the protonation acid. See, chitosan starts out with NH2 groups on it, and those NH2 groups must be protonated to NH3 in order for TPP to bind to them. In the literature, most authors were using acetic acid - a weak acid, and no matter the concentration of acetic acid I attmempted, beads would not form cleanly.
 
 Finally, I stumbled across a paper that used hydrochloric acid rather than acetic acid, and this was the game changer.
 
-## 7. Acetic to HCl
+## Acetic to HCl
 
 The switch from acetic to hydrochloric acid was night and day for bead formation.
 
-## 8. Desiccation
+## Desiccation
 
 Finally, we can take those beads and desiccate them, drastically reducing their weight and volume while retaining our microbial viability. This is an essential step of the process of developing a logistically feasible fertilizer, but desiccation also causes major stress to microbes. Desiccation induces oxidation stress from ROS buildup and can damage membranes, proteins, and DNA.
 
@@ -54,15 +54,33 @@ To combat this, we can slowly dry the granules out, giving the microbes time to 
 
 The desiccation in this study was done in a vacuum desiccation chamber at 30*C and 0.5 atm, but drying time is highly dependent on the density of the granules put into the desiccation chamber.
 
-## 9. CBG pic
+## CBG pic
 Finally, we end up with these. Chitosan biostimulant granules. Getting here was a long journey, and I developed a lot of ancillary things that I'd like to briefly highlight.
 
-## 10. Ancillary developments
+## Ancillary developments
 
-3d prints
+3d prints. lots of lab tools. centrifuge and microcentrifuge tube racks. camera to microscope adapters. etc.
 
-R package
+## Model organism: Tomato
 
-## 11. Model organism: Tomato
+So now we've got our
 
-## 12. Biological principles of import
+## Semi-Hydroponic growing
+
+## Salt stress
+
+## Plant Growth Promoting Bacteria
+
+## Principles influencing bacterial success
+
+## Stomates
+
+## Photosystem II
+
+## Hypothesis 1 - Location
+
+## Inoculant Location Trial
+
+## Greenhouse methods
+
+## Data Methods
