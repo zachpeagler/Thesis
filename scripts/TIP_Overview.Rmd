@@ -714,6 +714,8 @@ d23_st <- read.csv(d23_st_file) %>%
      row=="C"~"Foliar",
      row=="D"~"Soil+Foliar",
             TRUE~NA),
+     Treatment = as.factor(Treatment),
+     Treatment = factor(Treatment, levels = treatment_order23),
     soil = case_when(
       row=="A"~FALSE,
       row=="B"~TRUE,
@@ -2370,6 +2372,32 @@ comps <- glht(mod23_ber, linfct = mcp(treatment = "Tukey"))
 mod23_ber_letters <- cld(comps)$mcletters$Letters
 print(mod23_ber_letters)
 
+ggplot(data = d23_fg_summary, aes(x= treatment, y = pber, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  scale_y_continuous(labels = yticks)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=.85, label = mod23_ber_letters, size=10, family="open")+
+  ylab("Blossom-end Rot (%)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+ggsave("23_ber_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width =10)
+ggsave("23_ber_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width =10)
+
 ## sugar
 mod23_sug <- lm(logit(sugar_avg_mean)~ treatment, data = d23_fl_means)
 AIC(mod23_sug)
@@ -2521,6 +2549,67 @@ comps <- glht(mod23_msum, linfct = mcp(treatment = "Tukey"))
 mod23_msum_letters <- cld(comps)$mcletters$Letters
 print(mod23_msum_letters)
 
+ggplot(data = d23_fg_summary, aes(x= treatment, y = mass_sum, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=6000, label = mod23_msum_letters, size=10, family="open")+
+  ylab("Total Fruit Mass (g)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    axis.text = element_text(size=subtitle_size, family = "mont"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+ggsave("23_fmsum_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
+ggsave("23_fmsum_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
+
+## marketable fruit mass
+mod23_mmsum <- lm(mass_sum ~ treatment, data = d23_fl_summary)
+AIC(mod23_mmsum)
+summary(mod23_mmsum)
+comps <- glht(mod23_mmsum, linfct = mcp(treatment = "Tukey"))
+mod23_mmsum_letters <- cld(comps)$mcletters$Letters
+print(mod23_mmsum_letters)
+
+ggplot(data = d23_fl_summary, aes(x= treatment, y = mass_sum, 
+                         fill=treatment, color=treatment)) +
+  geom_boxplot(alpha=.5, width=0.5, outliers = FALSE)+
+  geom_jitter( width=.15, height=0)+
+  scale_fill_manual(values=four_colors)+
+  scale_color_manual(values=four_colors)+
+  labs(
+    title=NULL,
+    subtitle = NULL
+  ) +
+  annotate("text", x=1:4, y=3300, label = mod23_mmsum_letters, size=10, family="open")+
+  ylab("Marketable Fruit Mass (g)")+
+  xlab("Treatment")+
+  theme_bw()+
+  theme(
+    legend.position="none",
+    text = element_text(size=subtitle_size, family="mont", lineheight=0.8),
+    axis.title = element_text(size=subtitle_size, family = "mont", face= "bold"),
+    axis.text = element_text(size=subtitle_size, family = "mont"),
+    title = element_text(size=title_size, family="open", face="bold")
+  )
+
+ggsave("23_mfmsum_box_annotated.svg", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
+ggsave("23_mfmsum_box_annotated.png", path = "C:/Github/Thesis/figures/TIP23",
+       height = 6, width = 10)
 
 # fluorescence
 ## phi2 pca
@@ -3173,7 +3262,7 @@ ggplot(data = d24_f_summary, aes(x= treatment, y = pber * 100,
     subtitle = NULL
   ) +
   annotate("text", x=1:4, y=22, label = mod24_ber_letters, size=10, family="open")+
-  ylab("Percent BER")+
+  ylab("Blossom-end Rot (%)")+
   xlab("Treatment")+
   theme_bw()+
   theme(

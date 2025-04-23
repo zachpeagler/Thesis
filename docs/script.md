@@ -52,22 +52,31 @@ Finally, we can take those beads and desiccate them, drastically reducing their 
 
 To combat this, we can slowly dry the granules out, giving the microbes time to acclimate to the desiccation and enable their endogenous stress response mechanisms. 
 
-The desiccation in this study was done in a vacuum desiccation chamber at 30*C and 0.5 atm, but drying time is highly dependent on the density of the granules put into the desiccation chamber.
+The desiccation in this study was done in a vacuum desiccation chamber at 30*C and 0.5 atm, but drying time is highly dependent on the amount of granules put into the desiccation chamber.
 
 ## CBG pic
-Finally, we end up with these. Chitosan biostimulant granules. Getting here was a long journey, and I developed a lot of ancillary things that I'd like to briefly highlight.
+Finally, we end up with these. Chitosan biostimulant granules.
 
-## Ancillary developments
-
-3d prints. lots of lab tools. centrifuge and microcentrifuge tube racks. camera to microscope adapters. etc.
+So, we have our inoculation method we want to test out, but what are we going to apply it to?
 
 ## Model organism: Tomato
 
-So now we've got our
+Tomatoes are the second most grown crop in the United States and represent a large part of commercial growing, and they have a really easily identifiable stress response, known as blossom-end rot. Blossom-end rot is caused by a calcium deficiency in the plant.
+
+So we know what we're going to grow, but how are we going to grow it?
 
 ## Semi-Hydroponic growing
 
+We used semi-hydroponic growing in 2 of the 3 trials we performed. This method of cultivation uses an inert soil-like media along with a liquid nutrient solution, and has several advantages over traditional soil cultivation, including increased lang, nutrient, and water use efficiency, higher fruit yield, and no fertilizer loss to the environment. However, this often comes at the cost of decreased fruit quality.
+
+So how can we increase the fruit quality? We can use salt!
+
 ## Salt stress
+
+Salt stress has a variety of effects on plants, including decreased yield, increased blossom-end rot, and increased fruit quality.
+
+So when growing tomatoes in a semi-hydroponic system with salt stress, we have a quality-quantity tradeoff. But what if we used our biostimulants to offset that tradeoff? 
+This is where plang growth promoting bacteria come in
 
 ## Plant Growth Promoting Bacteria
 
