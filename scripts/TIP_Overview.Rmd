@@ -3314,6 +3314,7 @@ ggsave("24_mass_box_annotated.png", path = "C:/Github/Thesis/figures/TIP24",
 ## sugar
 d24_f_means$sug <- d24_f_means$sugar_avg_mean / 100
 mod24_sug <- lm(logit(sug) ~ treatment, data=d24_f_means)
+AIC(mod24_sug)
 summary(mod24_sug)
 comps <- glht(mod24_sug, linfct = mcp(treatment = "Tukey"))
 mod24_sug_letters <- cld(comps)$mcletters$Letters
